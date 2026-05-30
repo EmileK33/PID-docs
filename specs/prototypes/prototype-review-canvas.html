@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drawing Review Canvas - PID Analyzer</title>
+  <style>
+    :root {
+    --sidebar-width: 240px;
+    --sidebar-bg: #111827;
+    --sidebar-text: #D1D5DB;
+    --sidebar-active-bg: #1F2937;
+    --sidebar-active-text: #FFFFFF;
+    --sidebar-active-border: #3B82F6;
+    --header-height: 56px;
+    --content-bg: #F9FAFB;
+  }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      display: flex;
+      min-height: 100vh;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--content-bg);
+    }
+    .sidebar {
+      width: var(--sidebar-width);
+      min-height: 100vh;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      overflow-y: auto;
+      z-index: 20;
+    }
+    .sidebar-logo {
+      padding: 16px 20px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #FFFFFF;
+      border-bottom: 1px solid #374151;
+      flex-shrink: 0;
+    }
+    .sidebar nav { padding: 8px; flex: 1; }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 2px;
+      border-left: 3px solid transparent;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sidebar nav a:hover { background: #1F2937; color: #FFFFFF; }
+    .sidebar nav a.active {
+      background: var(--sidebar-active-bg);
+      color: var(--sidebar-active-text);
+      border-left-color: var(--sidebar-active-border);
+      font-weight: 600;
+    }
+    .main-wrapper {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .top-bar {
+      height: var(--header-height);
+      background: #FFFFFF;
+      border-bottom: 1px solid #E5E7EB;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .top-bar h1 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #111827;
+      flex: 1;
+    }
+    .main-content {
+      padding: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    
+    /* Canvas container */
+    .canvas-container {
+      flex: 1;
+      display: flex;
+      position: relative;
+      background: #FFFFFF;
+    }
+    
+    /* Canvas viewport */
+    .canvas-viewport {
+      flex: 1;
+      position: relative;
+      overflow: auto;
+      background: #FFFFFF;
+    }
+    
+    .canvas-svg-wrapper {
+      position: relative;
+      width: 1200px;
+      height: 800px;
+      margin: 24px;
+      border: 1px solid #E5E7EB;
+      background: #FAFBFC;
+      cursor: grab;
+    }
+    
+    .canvas-svg-wrapper.annotation-mode {
+      cursor: crosshair;
+    }
+    
+    .canvas-svg-wrapper.annotation-mode:active {
+      cursor: crosshair;
+    }
+    
+    .drawing-canvas {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    
+    /* Loading state overlay */
+    .canvas-loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 15;
+      border-radius: 8px;
+      gap: 16px;
+    }
+    
+    .canvas-loading-overlay.hidden {
+      display: none;
+    }
+    
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #E5E7EB;
+      border-top: 4px solid #3B82F6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      font-size: 14px;
+      color: #6B7280;
+    }
+    
+    /* Tool panel (left) */
+    .tool-panel {
+      width: 48px;
+      background: #FFFFFF;
+      border-right: 1px solid #E5E7EB;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 0;
+      gap: 8px;
+    }
+    
+    .tool-button {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6B7280;
+      transition: all 0.15s;
+    }
+    
+    .tool-button:hover {
+      background: #F3F4F6;
+      color: #111827;
+    }
+    
+    .tool-button.active {
+      background: #DBEAFE;
+      color: #3B82F6;
+    }
+    
+    .tool-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      color: #9CA3AF;
+    }
+    
+    .tool-label {
+      font-size: 10px;
+      color: #9CA3AF;
+      margin-top: 4px;
+    }
+    
+    /* Annotation mode banner */
+    .annotation-banner {
+      background: #FEF3C7;
+      border-bottom: 1px solid #FCD34D;
+      padding: 8px 24px;
+      font-size: 13px;
+      color: #92400E;
+      display: none;
+    }
+    
+    .annotation-banner.visible {
+      display: block;
+    }
+    
+    /* Bounding boxes on canvas */
+    svg .bounding-box {
+      stroke-width: 2px;
+      fill-opacity: 0.08;
+      cursor: pointer;
+      transition: stroke-width 0.1s, filter 0.1s;
+    }
+    
+    svg .bounding-box:hover {
+      stroke-width: 3px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+    }
+    
+    svg .bounding-box.selected {
+      stroke-width: 3px;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+    }
+    
+    svg .bounding-box.low-confidence {
+      stroke: #F59E0B;
+    }
+    
+    svg .bounding-box.manual {
+      stroke-dasharray: 4, 4;
+    }
+    
+    /* Entity legend */
+    .entity-legend {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      padding: 12px;
+      z-index: 5;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 12px;
+      color: #6B7280;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    
+    .legend-item:hover {
+      opacity: 0.8;
+    }
+    
+    .legend-item.disabled {
+      opacity: 0.5;
+    }
+    
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+    
+    /* Multi-page navigator */
+    .page-navigator {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 6px;
+      padding: 8px 16px;
+      display: none;
+      gap: 12px;
+      align-items: center;
+      z-index: 5;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .page-navigator.visible {
+      display: flex;
+    }
+    
+    .page-nav-button {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: #3B82F6;
+      padding: 4px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .page-nav-button:disabled {
+      color: #D1D5DB;
+      cursor: not-allowed;
+    }
+    
+    .page-indicator {
+      font-size: 12px;
+      color: #6B7280;
+      min-width: 80px;
+      text-align: center;
+    }
+    
+    /* Zoom controls */
+    .zoom-controls {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 5;
+    }
+    
+    .zoom-btn {
+      width: 40px;
+      height: 40px;
+      border: 1px solid #E5E7EB;
+      background: #FFFFFF;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #6B7280;
+      transition: all 0.15s;
+    }
+    
+    .zoom-btn:hover {
+      background: #F3F4F6;
+      color: #111827;
+    }
+    
+    /* Results sidebar */
+    .results-sidebar {
+      width: 280px;
+      background: #FFFFFF;
+      border-left: 1px solid #E5E7EB;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 8;
+    }
+    
+    .results-sidebar.hidden {
+      display: none;
+    }
+    
+    .sidebar-header {
+      padding: 12px;
+      border-bottom: 1px solid #E5E7EB;
+    }
+    
+    .collapse-toggle {
+      background: none;
+      border: none;
+      font-size: 12px;
+      color: #3B82F6;
+      cursor: pointer;
+      font-weight: 600;
+      padding: 0;
+    }
+    
+    .collapse-icon {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-left: 4px;
+      transition: transform 0.2s;
+    }
+    
+    .collapse-icon.collapsed {
+      transform: scaleX(-1);
+    }
+    
+    /* Tab navigation in sidebar */
+    .sidebar-tabs {
+      display: flex;
+      border-bottom: 1px solid #E5E7EB;
+      background: #F9FAFB;
+    }
+    
+    .tab-button {
+      flex: 1;
+      padding: 10px 8px;
+      border: none;
+      background: transparent;
+      color: #6B7280;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    
+    .tab-button:hover {
+      color: #111827;
+    }
+    
+    .tab-button.active {
+      color: #3B82F6;
+      border-bottom-color: #3B82F6;
+    }
+    
+    .symbol-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    
+    .symbol-skeleton {
+      height: 48px;
+      background: #F3F4F6;
+      border-radius: 6px;
+      margin-bottom: 4px;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    
+    .symbol-row {
+      padding: 12px;
+      border-bottom: 1px solid #F3F4F6;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    
+    .symbol-row:hover {
+      background: #F9FAFB;
+    }
+    
+    .symbol-row.selected {
+      background: #EFF6FF;
+    }
+    
+    .symbol-swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 2px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    
+    .symbol-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .symbol-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #111827;
+      word-break: break-word;
+    }
+    
+    .symbol-tag {
+      font-size: 11px;
+      color: #6B7280;
+      margin-top: 2px;
+    }
+    
+    .symbol-confidence {
+      font-size: 11px;
+      color: #6B7280;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    
+    .symbol-confidence.low {
+      color: #EF4444;
+    }
+    
+    /* Detail panel */
+    .detail-panel {
+      position: fixed;
+      right: -320px;
+      top: var(--header-height);
+      width: 320px;
+      height: calc(100vh - var(--header-height));
+      background: #FFFFFF;
+      border-left: 1px solid #E5E7EB;
+      box-shadow: -2px 4px 12px rgba(0,0,0,0.1);
+      z-index: 12;
+      transition: right 0.3s ease-out;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    
+    .detail-panel.open {
+      right: 0;
+    }
+    
+    .panel-overlay {
+      position: fixed;
+      top: var(--header-height);
+      left: var(--sidebar-width);
+      width: calc(100% - var(--sidebar-width));
+      height: calc(100% - var(--header-height));
+      background: rgba(0,0,0,0.2);
+      z-index: 11;
+      display: none;
+    }
+    
+    .panel-overlay.visible {
+      display: block;
+    }
+    
+    .panel-header {
+      padding: 16px;
+      border-bottom: 1px solid #E5E7EB;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .panel-swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    
+    .panel-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+    }
+    
+    .panel-subtext {
+      font-size: 12px;
+      color: #6B7280;
+    }
+    
+    .panel-close {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: #6B7280;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+    }
+    
+    .panel-body {
+      padding: 16px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    
+    .panel-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+    
+    .panel-label {
+      color: #6B7280;
+      font-weight: 500;
+      min-width: 80px;
+    }
+    
+    .panel-value {
+      color: #111827;
+      font-weight: 500;
+    }
+    
+    .status-pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .status-pill.accepted {
+      background: var(--badge-complete-bg);
+      color: var(--badge-complete-text);
+    }
+    
+    .status-pill.rejected {
+      background: var(--badge-failed-bg);
+      color: var(--badge-failed-text);
+    }
+    
+    .status-pill.reclassified {
+      background: #DBEAFE;
+      color: #1E40AF;
+    }
+    
+    .panel-section {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #F3F4F6;
+    }
+    
+    .panel-section:last-child {
+      border-bottom: none;
+    }
+    
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #6B7280;
+      margin-bottom: 8px;
+    }
+    
+    .dropdown-select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #E5E7EB;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #111827;
+      background: #FFFFFF;
+    }
+    
+    .dropdown-select:focus {
+      outline: none;
+      border-color: #3B82F6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .panel-button {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #E5E7EB;
+      background: #FFFFFF;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: 8px;
+    }
+    
+    .panel-button:hover {
+      background: #F9FAFB;
+    }
+    
+    .panel-button.primary {
+      background: #3B82F6;
+      color: #FFFFFF;
+      border-color: #3B82F6;
+    }
+    
+    .panel-button.primary:hover {
+      background: #2563EB;
+    }
+    
+    .panel-button.destructive {
+      border-color: #EF4444;
+      color: #EF4444;
+    }
+    
+    .panel-button.destructive:hover {
+      background: #FEE2E2;
+    }
+    
+    .training-notice {
+      font-size: 11px;
+      color: #6B7280;
+      font-style: italic;
+      padding: 8px;
+      background: #F9FAFB;
+      border-radius: 4px;
+    }
+    
+    .save-indicator {
+      display: none;
+      font-size: 12px;
+      color: #10B981;
+      font-weight: 600;
+      padding: 8px;
+      background: #D1FAE5;
+      border-radius: 4px;
+      text-align: center;
+      margin-bottom: 8px;
+      animation: fadeOut 2s ease-out forwards;
+    }
+    
+    .save-indicator.visible {
+      display: block;
+    }
+    
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    
+    .panel-footer {
+      padding: 16px;
+      border-top: 1px solid #E5E7EB;
+      display: flex;
+      gap: 8px;
+    }
+    
+    .panel-footer button {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #E5E7EB;
+      background: #FFFFFF;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .panel-footer button.done {
+      background: #3B82F6;
+      color: #FFFFFF;
+      border-color: #3B82F6;
+    }
+    
+    .panel-footer button.done:hover {
+      background: #2563EB;
+    }
+    
+    /* Top toolbar */
+    .canvas-toolbar {
+      padding: 16px 24px;
+      background: #FFFFFF;
+      border-bottom: 1px solid #E5E7EB;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .canvas-toolbar-back {
+      background: none;
+      border: none;
+      color: #3B82F6;
+      cursor: pointer;
+      font-size: 20px;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+    }
+    
+    .canvas-toolbar-info {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .drawing-filename {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+    }
+    
+    .drawing-revision {
+      display: inline-block;
+      padding: 2px 6px;
+      background: #E5E7EB;
+      color: #6B7280;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+    
+    .canvas-toolbar-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .export-button {
+      padding: 8px 16px;
+      background: #3B82F6;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .export-button:hover {
+      background: #2563EB;
+    }
+    
+    .export-button:disabled {
+      background: #D1D5DB;
+      cursor: not-allowed;
+    }
+    
+    .save-status {
+      font-size: 12px;
+      color: #10B981;
+      font-weight: 600;
+      display: none;
+    }
+    
+    .save-status.visible {
+      display: inline;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+  <div class="sidebar-logo">PID</div>
+  <nav id="sidebar-nav">
+    <a href="prototype-drawing-library.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Drawing Library
+    </a>
+    <a href="prototype-file-upload.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+      File Upload Drop Zone
+    </a>
+    <a href="prototype-review-canvas.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Drawing Review Canvas
+    </a>
+    <a href="prototype-symbol-detail-panel.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Symbol Detail & Reclassification Panel
+    </a>
+    <a href="prototype-export-modal.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+      Export Download Modal
+    </a>
+    <a href="prototype-account-settings.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Account Settings
+    </a>
+    <a href="prototype-subscription-upgrade.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+      Subscription & Upgrade Prompt
+    </a>
+  </nav>
+</aside>
+
+  <div class="main-wrapper">
+    <div class="top-bar">
+      <h1>Drawing Review Canvas</h1>
+    </div>
+
+    <main class="main-content">
+      <!-- Canvas toolbar -->
+      <div class="canvas-toolbar">
+        <button class="canvas-toolbar-back" onclick="window.location.href='prototype-drawing-library.html'" title="Back to Drawing Library">←</button>
+        <div class="canvas-toolbar-info">
+          <span class="drawing-filename">Reactor_Cooling_Loop_P001.pdf</span>
+          <span class="drawing-revision">Rev A</span>
+        </div>
+        <div class="canvas-toolbar-actions">
+          <button class="export-button" onclick="handleExport()">Export</button>
+          <span class="save-status" id="save-status">✓ Saved</span>
+        </div>
+      </div>
+
+      <!-- Annotation mode banner -->
+      <div class="annotation-banner" id="annotation-banner">
+        📝 Annotation mode active — draw a rectangle to add a symbol
+      </div>
+
+      <!-- Main canvas area -->
+      <div class="canvas-container">
+        <!-- Tool panel (left) -->
+        <div class="tool-panel">
+          <button class="tool-button active" id="navigate-tool" title="Navigate (N)" onclick="switchMode('navigate')">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg>
+          </button>
+          <button class="tool-button" id="annotate-tool" title="Annotate (A)" onclick="switchMode('annotate')">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15H9v-3L18.5 2.5z"/></svg>
+          </button>
+        </div>
+
+        <!-- Canvas viewport -->
+        <div class="canvas-viewport" id="canvas-viewport">
+          <div class="canvas-svg-wrapper" id="canvas-wrapper">
+            <!-- Loading overlay -->
+            <div class="canvas-loading-overlay" id="loading-overlay">
+              <div class="spinner"></div>
+              <div class="loading-text">Loading symbols...</div>
+            </div>
+
+            <!-- SVG canvas -->
+            <svg class="drawing-canvas" id="drawing-canvas" viewBox="0 0 1200 800">
+              <!-- Grid background -->
+              <defs>
+                <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+                  <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#F0F0F0" stroke-width="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="1200" height="800" fill="url(#grid)"/>
+              
+              <!-- Sample bounding boxes (pipe, valve, instrument) -->
+              <rect class="bounding-box" x="120" y="200" width="80" height="40" stroke="var(--color-pipe)" fill="var(--color-pipe)" data-id="1" data-class="pipe" data-confidence="0.92"/>
+              <rect class="bounding-box" x="280" y="250" width="60" height="60" stroke="var(--color-valve)" fill="var(--color-valve)" data-id="2" data-class="valve" data-confidence="0.87"/>
+              <rect class="bounding-box" x="420" y="180" width="50" height="50" stroke="var(--color-instrument)" fill="var(--color-instrument)" data-id="3" data-class="instrument" data-confidence="0.45" class="bounding-box low-confidence"/>
+              <rect class="bounding-box" x="580" y="220" width="70" height="45" stroke="var(--color-pipe)" fill="var(--color-pipe)" data-id="4" data-class="pipe" data-confidence="0.91"/>
+              <rect class="bounding-box" x="750" y="280" width="55" height="55" stroke="var(--color-valve)" fill="var(--color-valve)" data-id="5" data-class="valve" data-confidence="0.79"/>
+              <rect class="bounding-box" x="200" y="450" width="65" height="50" stroke="var(--color-instrument)" fill="var(--color-instrument)" data-id="6" data-class="instrument" data-confidence="0.88"/>
+              <rect class="bounding-box" x="450" y="500" width="75" height="40" stroke="var(--color-pipe)" fill="var(--color-pipe)" data-id="7" data-class="pipe" data-confidence="0.94"/>
+              <rect class="bounding-box manual" x="800" y="450" width="60" height="50" stroke="var(--color-valve)" fill="var(--color-valve)" data-id="8" data-class="valve" data-confidence="1.0" data-source="manual"/>
+            </svg>
+
+            <!-- Entity legend -->
+            <div class="entity-legend">
+              <div class="legend-item" data-class="pipe">
+                <div class="legend-swatch" style="background: var(--color-pipe);"></div>
+                <span>Pipe</span>
+              </div>
+              <div class="legend-item" data-class="valve">
+                <div class="legend-swatch" style="background: var(--color-valve);"></div>
+                <span>Valve</span>
+              </div>
+              <div class="legend-item" data-class="instrument">
+                <div class="legend-swatch" style="background: var(--color-instrument);"></div>
+                <span>Instrument</span>
+              </div>
+            </div>
+
+            <!-- Page navigator (hidden for single-page drawings) -->
+            <div class="page-navigator" id="page-navigator">
+              <button class="page-nav-button" id="prev-page" onclick="previousPage()">←</button>
+              <div class="page-indicator"><span id="current-page">1</span> of <span id="total-pages">1</span></div>
+              <button class="page-nav-button" id="next-page" onclick="nextPage()">→</button>
+            </div>
+
+            <!-- Zoom controls -->
+            <div class="zoom-controls">
+              <button class="zoom-btn" title="Zoom in" onclick="zoomIn()">+</button>
+              <button class="zoom-btn" title="Zoom out" onclick="zoomOut()">−</button>
+              <button class="zoom-btn" title="Reset zoom" onclick="resetZoom()">◯</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results sidebar -->
+        <div class="results-sidebar" id="results-sidebar">
+          <div class="sidebar-header">
+            <button class="collapse-toggle" onclick="toggleSidebar()">
+              Results
+              <span class="collapse-icon">▶</span>
+            </button>
+          </div>
+
+          <!-- Tabs -->
+          <div class="sidebar-tabs">
+            <button class="tab-button active" onclick="filterSymbols('all')">All <span id="count-all">(8)</span></button>
+            <button class="tab-button" onclick="filterSymbols('pipe')">Pipes <span id="count-pipe">(3)</span></button>
+            <button class="tab-button" onclick="filterSymbols('valve')">Valves <span id="count-valve">(3)</span></button>
+            <button class="tab-button" onclick="filterSymbols('instrument')">Instr. <span id="count-instrument">(2)</span></button>
+          </div>
+
+          <!-- Symbol list (initially loading) -->
+          <div class="symbol-list" id="symbol-list">
+            <div class="symbol-skeleton"></div>
+            <div class="symbol-skeleton"></div>
+            <div class="symbol-skeleton"></div>
+            <div class="symbol-skeleton"></div>
+            <div class="symbol-skeleton"></div>
+          </div>
+        </div>
+
+        <!-- Panel overlay -->
+        <div class="panel-overlay" id="panel-overlay" onclick="closeDetailPanel()"></div>
+
+        <!-- Detail panel -->
+        <div class="detail-panel" id="detail-panel">
+          <div class="panel-header">
+            <div class="panel-swatch" id="panel-swatch"></div>
+            <div style="flex: 1;">
+              <div class="panel-title" id="panel-title">Pipe Segment</div>
+              <div class="panel-subtext" id="panel-subtext">ML Detected</div>
+            </div>
+            <button class="panel-close" onclick="closeDetailPanel()">✕</button>
+          </div>
+
+          <div class="panel-body">
+            <div class="save-indicator" id="panel-save-indicator">✓ Saved</div>
+
+            <div class="panel-row">
+              <span class="panel-label">Confidence:</span>
+              <span class="panel-value" id="panel-confidence">0.92</span>
+            </div>
+
+            <div class="panel-row">
+              <span class="panel-label">Source:</span>
+              <span class="panel-value" id="panel-source">ML Detected</span>
+            </div>
+
+            <div class="panel-row">
+              <span class="panel-label">Status:</span>
+              <span class="status-pill accepted" id="panel-status">Accepted</span>
+            </div>
+
+            <div class="panel-section">
+              <div class="section-label">Tag / Label</div>
+              <input type="text" id="panel-tag" placeholder="e.g. P1" style="width: 100%; padding: 8px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 12px;" readonly>
+            </div>
+
+            <div class="panel-section">
+              <div class="section-label">Reclassify</div>
+              <select class="dropdown-select" id="panel-class-select" onchange="updateClassSelect()">
+                <option value="">Select class...</option>
+                <option value="pipe">Pipe</option>
+                <option value="gate-valve">Gate Valve</option>
+                <option value="globe-valve">Globe Valve</option>
+                <option value="ball-valve">Ball Valve</option>
+                <option value="butterfly">Butterfly Valve</option>
+                <option value="check">Check Valve</option>
+                <option value="control">Control Valve</option>
+                <option value="instrument">Instrument</option>
+              </select>
+              <button class="panel-button primary" id="panel-apply-btn" style="display: none; margin-top: 8px;" onclick="applyReclassify()">Apply</button>
+            </div>
+
+            <div class="panel-section">
+              <button class="panel-button destructive" id="panel-reject-btn" onclick="rejectSymbol()">Reject (false positive)</button>
+              <div id="panel-reject-confirm" style="display: none; margin-top: 8px; padding: 8px; background: #FEE2E2; border-radius: 4px;">
+                <div style="font-size: 12px; color: #991B1B; margin-bottom: 8px;">Confirm reject this symbol?</div>
+                <button class="panel-button destructive" onclick="confirmReject()" style="margin-bottom: 4px;">Yes, Reject</button>
+                <button class="panel-button" onclick="cancelReject()">Cancel</button>
+              </div>
+              <button class="panel-button" id="panel-restore-btn" style="display: none;" onclick="restoreSymbol()">Restore</button>
+            </div>
+
+            <div class="training-notice">
+              ✓ Corrections contribute to ML training
+            </div>
+          </div>
+
+          <div class="panel-footer">
+            <button class="done" onclick="closeDetailPanel()">Done</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+  (function () {
+    var path = window.location.pathname.split('/').pop() || '';
+    document.querySelectorAll('#sidebar-nav a').forEach(function (link) {
+      if (link.getAttribute('href') === path) link.classList.add('active');
+    });
+  })();
+</script>
+</body>
+</html>

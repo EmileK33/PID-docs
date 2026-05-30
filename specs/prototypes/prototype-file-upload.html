@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Upload Drop Zone - PID Analyzer</title>
+  <style>
+    :root {
+    --sidebar-width: 240px;
+    --sidebar-bg: #111827;
+    --sidebar-text: #D1D5DB;
+    --sidebar-active-bg: #1F2937;
+    --sidebar-active-text: #FFFFFF;
+    --sidebar-active-border: #3B82F6;
+    --header-height: 56px;
+    --content-bg: #F9FAFB;
+  }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      display: flex;
+      min-height: 100vh;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--content-bg);
+    }
+    .sidebar {
+      width: var(--sidebar-width);
+      min-height: 100vh;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      overflow-y: auto;
+      z-index: 20;
+    }
+    .sidebar-logo {
+      padding: 16px 20px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #FFFFFF;
+      border-bottom: 1px solid #374151;
+      flex-shrink: 0;
+    }
+    .sidebar nav { padding: 8px; flex: 1; }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 2px;
+      border-left: 3px solid transparent;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sidebar nav a:hover { background: #1F2937; color: #FFFFFF; }
+    .sidebar nav a.active {
+      background: var(--sidebar-active-bg);
+      color: var(--sidebar-active-text);
+      border-left-color: var(--sidebar-active-border);
+      font-weight: 600;
+    }
+    .main-wrapper {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .top-bar {
+      height: var(--header-height);
+      background: #FFFFFF;
+      border-bottom: 1px solid #E5E7EB;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .top-bar h1 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #111827;
+      flex: 1;
+    }
+    .top-bar-action {
+      padding: 8px 16px;
+      background: var(--color-status-processing);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .top-bar-action:hover {
+      background: #2563EB;
+    }
+    .main-content {
+      padding: 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .upload-container {
+      max-width: 640px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .drop-zone {
+      border: 2px dashed #E5E7EB;
+      border-radius: 8px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #FFFFFF;
+      min-height: 240px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .drop-zone:hover {
+      border-color: var(--color-status-processing);
+      background: #F0F9FF;
+    }
+    .drop-zone.dragging-over {
+      border-color: var(--color-status-processing);
+      background: #EFF6FF;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .drop-zone input[type="file"] {
+      display: none;
+    }
+    .drop-zone-icon {
+      width: 48px;
+      height: 48px;
+      color: #6B7280;
+      stroke-width: 1.5;
+    }
+    .drop-zone-headline {
+      font-size: 16px;
+      font-weight: 600;
+      color: #111827;
+      margin-top: 8px;
+    }
+    .drop-zone-subtext {
+      font-size: 14px;
+      color: #6B7280;
+      margin-top: 4px;
+    }
+    .drop-zone-format-hint {
+      font-size: 13px;
+      color: #9CA3AF;
+      margin-top: 8px;
+    }
+    .metadata-section {
+      display: none;
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      padding: 20px;
+      gap: 16px;
+      flex-direction: column;
+    }
+    .metadata-section.visible {
+      display: flex;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .form-group label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #111827;
+    }
+    .form-group input {
+      padding: 10px 12px;
+      border: 1px solid #E5E7EB;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--color-status-processing);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+    .form-group input::placeholder {
+      color: #D1D5DB;
+    }
+    .progress-section {
+      display: none;
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      padding: 20px;
+      gap: 12px;
+      flex-direction: column;
+    }
+    .progress-section.visible {
+      display: flex;
+    }
+    .progress-filename {
+      font-size: 14px;
+      font-weight: 500;
+      color: #111827;
+    }
+    .progress-size {
+      font-size: 12px;
+      color: #6B7280;
+    }
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: #E5E7EB;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--color-status-processing);
+      width: 0%;
+      transition: width 0.3s;
+    }
+    .progress-percentage {
+      font-size: 13px;
+      color: #6B7280;
+    }
+    .progress-cancel {
+      color: #3B82F6;
+      text-decoration: none;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .progress-cancel:hover {
+      color: #2563EB;
+      text-decoration: underline;
+    }
+    .validation-error {
+      display: none;
+      background: #FEE2E2;
+      border: 1px solid #FECACA;
+      border-radius: 6px;
+      padding: 12px 14px;
+      gap: 12px;
+      align-items: flex-start;
+      color: #991B1B;
+      font-size: 14px;
+    }
+    .validation-error.visible {
+      display: flex;
+    }
+    .validation-error-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      stroke-width: 2;
+    }
+    .validation-error-text {
+      flex: 1;
+      line-height: 1.5;
+    }
+    .free-tier-counter {
+      display: none;
+      background: #FEF3C7;
+      border: 1px solid #FCD34D;
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-size: 14px;
+      color: #92400E;
+    }
+    .free-tier-counter.visible {
+      display: block;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 30;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.visible {
+      display: flex;
+    }
+    .modal-content {
+      background: #FFFFFF;
+      border-radius: 8px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      max-width: 480px;
+      width: 90%;
+      padding: 32px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .modal-headline {
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+    }
+    .modal-description {
+      font-size: 14px;
+      color: #6B7280;
+      line-height: 1.6;
+    }
+    .modal-file-info {
+      background: #F9FAFB;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 13px;
+      color: #374151;
+      font-weight: 500;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .modal-actions button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      height: 40px;
+    }
+    .modal-primary {
+      background: var(--color-status-processing);
+      color: white;
+    }
+    .modal-primary:hover {
+      background: #2563EB;
+    }
+    .modal-secondary {
+      background: #E5E7EB;
+      color: #111827;
+    }
+    .modal-secondary:hover {
+      background: #D1D5DB;
+    }
+    .icon-checkmark {
+      width: 32px;
+      height: 32px;
+      margin: 0 auto 8px;
+      color: var(--color-status-complete);
+      stroke-width: 2;
+    }
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .toast {
+      background: #FFFFFF;
+      border-left: 4px solid;
+      border-radius: 4px;
+      padding: 14px 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      max-width: 320px;
+      animation: slideIn 0.3s ease-out;
+    }
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    .toast-success {
+      border-left-color: var(--color-status-complete);
+      color: #065F46;
+    }
+    .toast-error {
+      border-left-color: var(--color-status-failed);
+      color: #991B1B;
+    }
+    .toast-close {
+      cursor: pointer;
+      color: #9CA3AF;
+      margin-left: auto;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .toast-close:hover {
+      color: #6B7280;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+  <div class="sidebar-logo">PID</div>
+  <nav id="sidebar-nav">
+    <a href="prototype-drawing-library.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Drawing Library
+    </a>
+    <a href="prototype-file-upload.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+      File Upload Drop Zone
+    </a>
+    <a href="prototype-review-canvas.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Drawing Review Canvas
+    </a>
+    <a href="prototype-symbol-detail-panel.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Symbol Detail & Reclassification Panel
+    </a>
+    <a href="prototype-export-modal.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+      Export Download Modal
+    </a>
+    <a href="prototype-account-settings.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Account Settings
+    </a>
+    <a href="prototype-subscription-upgrade.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+      Subscription & Upgrade Prompt
+    </a>
+  </nav>
+</aside>
+
+  <div class="main-wrapper">
+    <div class="top-bar">
+      <h1>Upload Drawing</h1>
+      <a href="prototype-drawing-library.html" style="color: #3B82F6; text-decoration: none; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to Library
+      </a>
+    </div>
+
+    <main class="main-content">
+      <div class="upload-container">
+        <!-- Free tier counter (conditional) -->
+        <div class="free-tier-counter visible" id="freeTierCounter">
+          <strong>2 of 3</strong> drawings processed this month. Resets <strong>14 Jul 2025</strong>.
+        </div>
+
+        <!-- Main drop zone -->
+        <div class="drop-zone" id="dropZone">
+          <svg class="drop-zone-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M12 2v20M2 12h20"/>
+            <path d="M7 7l5-5 5 5M7 17l5 5 5-5"/>
+          </svg>
+          <div class="drop-zone-headline">Drag PDF or DWG here</div>
+          <div class="drop-zone-subtext">or <span style="cursor: pointer; color: #3B82F6; font-weight: 500;" id="browseLink">browse files</span> · Max 100MB</div>
+          <div class="drop-zone-format-hint">Accepted: PDF (vector), DWG (AutoCAD 2010–2024)</div>
+          <input type="file" id="fileInput" accept=".pdf,.dwg" />
+        </div>
+
+        <!-- Validation error -->
+        <div class="validation-error" id="validationError">
+          <svg class="validation-error-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <div class="validation-error-text" id="validationErrorText"></div>
+        </div>
+
+        <!-- Metadata section -->
+        <div class="metadata-section" id="metadataSection">
+          <div class="form-group">
+            <label for="revisionInput">Revision (optional)</label>
+            <input type="text" id="revisionInput" placeholder="e.g. Rev C" />
+          </div>
+        </div>
+
+        <!-- Progress section -->
+        <div class="progress-section" id="progressSection">
+          <div class="progress-filename" id="progressFilename">sample-drawing.pdf</div>
+          <div class="progress-size" id="progressSize">8.5 MB</div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progressBar" style="width: 0%;"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="progress-percentage" id="progressPercentage">0%</div>
+            <a class="progress-cancel" id="cancelUpload">Cancel</a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Upgrade prompt modal -->
+  <div class="modal-overlay" id="upgradeModal">
+    <div class="modal-content">
+      <svg class="icon-checkmark" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></path>
+      </svg>
+      <div class="modal-headline">You've reached your 3-drawing limit</div>
+      <div class="modal-description">You've used your monthly allocation for Free tier processing. Your uploaded file is safe and ready to process when you upgrade.</div>
+      <div class="modal-file-info" id="modalFileInfo">plan-layout-v2.dwg · 2.3 MB</div>
+      <div class="modal-actions">
+        <button class="modal-primary" id="upgradeButton">Upgrade to Pro</button>
+        <button class="modal-secondary" id="learnMoreButton">Learn more</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+  (function () {
+    var path = window.location.pathname.split('/').pop() || '';
+    document.querySelectorAll('#sidebar-nav a').forEach(function (link) {
+      if (link.getAttribute('href') === path) link.classList.add('active');
+    });
+  })();
+</script>
+</body>
+</html>

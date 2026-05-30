@@ -1,0 +1,67 @@
+{
+  "specsDir": "C:\\Users\\emile\\Downloads\\PID-docs\\specs",
+  "project": "PID",
+  "timestamp": "2026-05-30T19:17:05.220Z",
+  "durationSeconds": 11,
+  "average": 82,
+  "perDocument": {
+    "PRD": {
+      "pct": 87,
+      "scores": {
+        "consistency": 9,
+        "completeness": 10,
+        "conciseness": 7,
+        "specificity": 9,
+        "clarity": 9,
+        "actionability": 8
+      },
+      "run1": 87,
+      "run2": 87,
+      "variance": 0
+    },
+    "User Stories": {
+      "pct": 77,
+      "scores": {
+        "consistency": 8,
+        "completeness": 9,
+        "conciseness": 6,
+        "specificity": 8,
+        "clarity": 8,
+        "actionability": 7
+      }
+    },
+    "UX Design": {
+      "pct": 75,
+      "scores": {
+        "consistency": 8,
+        "completeness": 9,
+        "conciseness": 5,
+        "specificity": 8,
+        "clarity": 8,
+        "actionability": 7
+      }
+    },
+    "Architecture": {
+      "pct": 87,
+      "scores": {
+        "consistency": 9,
+        "completeness": 9,
+        "conciseness": 8,
+        "specificity": 9,
+        "clarity": 9,
+        "actionability": 8
+      }
+    },
+    "Devil's Advocate": {
+      "pct": 82,
+      "scores": {
+        "consistency": 8,
+        "completeness": 9,
+        "conciseness": 7,
+        "specificity": 9,
+        "clarity": 8,
+        "actionability": 8
+      }
+    }
+  }
+}

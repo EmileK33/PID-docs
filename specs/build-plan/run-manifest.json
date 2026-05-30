@@ -1,0 +1,844 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-30T18:55:33.912Z",
+  "integrationCmd": "npm run test:integration",
+  "waves": [
+    {
+      "kind": "feature",
+      "phase": 0,
+      "sessions": [
+        {
+          "id": "S0-A",
+          "brief": "section5-briefs/S0-A-Scaffold-Shared-Stubs.md",
+          "ownedFiles": [
+            "backend/app/main.py",
+            "backend/app/config.py",
+            "backend/app/db/base.py",
+            "backend/app/db/session.py",
+            "backend/app/api/__init__.py",
+            "backend/app/api/routers/__init__.py",
+            "backend/app/api/routers/_stubs.py",
+            "backend/app/workers/celery_app.py",
+            "backend/app/workers/__init__.py",
+            "backend/app/schemas/contracts.py",
+            "backend/app/schemas/__init__.py",
+            "backend/alembic.ini",
+            "backend/alembic/env.py",
+            "backend/alembic/script.py.mako",
+            "backend/Dockerfile",
+            "backend/Dockerfile.worker",
+            "backend/Dockerfile.ml",
+            "frontend/index.html",
+            "frontend/vite.config.ts",
+            "frontend/tsconfig.json",
+            "frontend/src/main.tsx",
+            "frontend/src/App.tsx",
+            "frontend/src/router.tsx",
+            "frontend/src/pages/_stubs.tsx",
+            "frontend/src/types/contracts.ts",
+            "marketing/next.config.js",
+            "marketing/tsconfig.json",
+            "marketing/app/layout.tsx",
+            "marketing/app/page.tsx",
+            "docker-compose.yml",
+            "docker-compose.test.yml",
+            ".env.example",
+            "README.md",
+            "ops/oda-sandbox/Dockerfile",
+            "ops/clamav/Dockerfile"
+          ],
+          "test": {
+            "cmd": "pytest tests/sessions/s0-a.test.py -v",
+            "file": "tests/sessions/s0-a.test.py"
+          },
+          "checkpoint": "`docker compose up api` boots and `GET /healthz` returns 200 {\"status\":\"ok\"}; every other §1.6 endpoint returns 501 with a detail naming its owning session.",
+          "manualAcs": [
+            {
+              "id": "S0-A-AC-DOCKER-BUILD",
+              "text": "Three Docker images build successfully: backend/Dockerfile, backend/Dockerfile.worker, backend/Dockerfile.ml (CUDA base)."
+            },
+            {
+              "id": "S0-A-AC-OPS-DOCKER",
+              "text": "ops/clamav/Dockerfile and ops/oda-sandbox/Dockerfile build successfully; oda-sandbox runs as non-root USER 1000:1000."
+            }
+          ]
+        },
+        {
+          "id": "S0-B",
+          "brief": "section5-briefs/S0-B-Integration-Harness-Manifests.md",
+          "ownedFiles": [
+            "package.json",
+            "backend/pyproject.toml",
+            "backend/poetry.lock",
+            "frontend/package.json",
+            "marketing/package.json",
+            "tests/integration/conftest.py",
+            "tests/integration/docker-compose.fixtures.yml",
+            "tests/integration/fixtures/db.py",
+            "tests/integration/fixtures/redis.py",
+            "tests/integration/fixtures/s3.py",
+            "tests/integration/smoke/test_smoke.py",
+            "tests/integration/README.md",
+            "scripts/test-integration.sh",
+            ".github/workflows/integration.yml"
+          ],
+          "test": {
+            "cmd": "npm run test:integration",
+            "file": "tests/integration/smoke/test_smoke.py"
+          },
+          "checkpoint": "Running `npm run test:integration` from a clean checkout boots Postgres/Redis/MinIO containers, the smoke suite passes green, and containers are torn down cleanly.",
+          "manualAcs": []
+        }
+      ]
+    },
+    {
+      "kind": "integration",
+      "phase": "integration-0",
+      "test": {
+        "cmd": "npm run test:integration"
+      }
+    },
+    {
+      "kind": "feature",
+      "phase": 1,
+      "sessions": [
+        {
+          "id": "S1-A",
+          "brief": "section5-briefs/S1-A-DB-Models-Migrations.md",
+          "ownedFiles": [
+            "backend/app/db/models/__init__.py",
+            "backend/app/db/models/user.py",
+            "backend/app/db/models/team.py",
+            "backend/app/db/models/tier.py",
+            "backend/app/db/models/subscription.py",
+            "backend/app/db/models/stored_file.py",
+            "backend/app/db/models/file_hash_blocklist.py",
+            "backend/app/db/models/drawing.py",
+            "backend/app/db/models/entity_class.py",
+            "backend/app/db/models/detected_symbol.py",
+            "backend/app/db/models/table_cell.py",
+            "backend/app/db/models/user_correction.py",
+            "backend/app/db/models/export_record.py",
+            "backend/app/db/models/ml_training_consent.py",
+            "backend/app/db/models/revision_comparison.py",
+            "backend/app/db/models/audit_log.py",
+            "backend/app/db/models/stripe_event.py",
+            "backend/alembic/versions/0001_initial_schema.py",
+            "backend/alembic/versions/0002_rls_policies.py",
+            "backend/alembic/versions/0003_audit_partitions.py",
+            "backend/app/db/seed_tiers.py",
+            "backend/app/db/seed_entity_classes.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/integration/test_db_schema.py -v",
+            "file": "tests/integration/test_db_schema.py"
+          },
+          "checkpoint": "An operator running `alembic upgrade head` against an empty Postgres database produces a fully populated schema with seeded tier and entity_class rows, ready for application connections.",
+          "manualAcs": []
+        },
+        {
+          "id": "S1-B",
+          "brief": "section5-briefs/S1-B-Auth-Middleware-Supabase-Client.md",
+          "ownedFiles": [
+            "backend/app/auth/__init__.py",
+            "backend/app/auth/supabase_client.py",
+            "backend/app/auth/jwt_verifier.py",
+            "backend/app/auth/middleware.py",
+            "backend/app/auth/dependencies.py",
+            "backend/app/auth/permissions.py",
+            "backend/app/auth/brute_force.py",
+            "tests/integration/test_auth_middleware.py"
+          ],
+          "test": {
+            "cmd": "cd backend && poetry run pytest tests/integration/test_auth_middleware.py -v",
+            "file": "tests/integration/test_auth_middleware.py"
+          },
+          "checkpoint": "A FastAPI route guarded by Depends(get_current_user) returns 401 without a token and the authenticated user payload with a valid RS256 token; Redis key brute_force:{email} reaches TTL=900 after one recorded failed login.",
+          "manualAcs": [
+            {
+              "id": "US-005-AC-KEY-ROT",
+              "text": "Public-key rotation: rotating JWT_RS256_PUBLIC_KEY in production env invalidates previously issued tokens without code change."
+            }
+          ]
+        },
+        {
+          "id": "S1-C",
+          "brief": "section5-briefs/S1-C-Storage-Hash-Utilities.md",
+          "ownedFiles": [
+            "backend/app/storage/__init__.py",
+            "backend/app/storage/s3_client.py",
+            "backend/app/storage/presigned.py",
+            "backend/app/storage/hashing.py",
+            "backend/app/storage/blocklist.py",
+            "tests/integration/test_storage.py"
+          ],
+          "test": {
+            "cmd": "cd backend && poetry run pytest ../tests/integration/test_storage.py -v",
+            "file": "tests/integration/test_storage.py"
+          },
+          "checkpoint": "Developers can import storage helpers to obtain a 15-minute SSE-encrypted pre-signed URL and check a SHA-256 hash against the file_hash_blocklist table.",
+          "manualAcs": []
+        },
+        {
+          "id": "S1-D",
+          "brief": "section5-briefs/S1-D-Redis,-Cache,-PubSub-Celery-Config.md",
+          "ownedFiles": [
+            "backend/app/redis/__init__.py",
+            "backend/app/redis/client.py",
+            "backend/app/redis/cache.py",
+            "backend/app/redis/pubsub.py",
+            "backend/app/workers/queues.py",
+            "backend/app/workers/base.py",
+            "tests/integration/test_redis_pubsub.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/integration/test_redis_pubsub.py -v",
+            "file": "tests/integration/test_redis_pubsub.py"
+          },
+          "checkpoint": "Running `pytest tests/integration/test_redis_pubsub.py` produces a green suite, and a manual publish to `drawing:status:{id}` reaches an external `redis-cli SUBSCRIBE` listener.",
+          "manualAcs": []
+        },
+        {
+          "id": "S1-E",
+          "brief": "section5-briefs/S1-E-Analytics-Emitter-(PostHog).md",
+          "ownedFiles": [
+            "backend/app/analytics/__init__.py",
+            "backend/app/analytics/posthog_client.py",
+            "backend/app/analytics/events.py",
+            "backend/app/analytics/dead_letter.py",
+            "tests/integration/test_analytics.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/integration/test_analytics.py -v",
+            "file": "tests/integration/test_analytics.py"
+          },
+          "checkpoint": "Calling any emit_* function with POSTHOG_API_KEY set produces a corresponding event in PostHog within ~30s; with the key unset, calls are silent no-ops that log a startup warning.",
+          "manualAcs": [
+            {
+              "id": "US-010-AC-MANUAL",
+              "text": "Manual verification that events appear in PostHog dashboard in staging with POSTHOG_API_KEY set."
+            }
+          ]
+        },
+        {
+          "id": "S1-F",
+          "brief": "section5-briefs/S1-F-Frontend-Shared-Infrastructure.md",
+          "ownedFiles": [
+            "frontend/src/api/client.ts",
+            "frontend/src/api/endpoints.ts",
+            "frontend/src/auth/AuthContext.tsx",
+            "frontend/src/auth/useAuth.ts",
+            "frontend/src/auth/supabaseClient.ts",
+            "frontend/src/hooks/useSSE.ts",
+            "frontend/src/hooks/usePolling.ts",
+            "frontend/src/components/Layout.tsx",
+            "frontend/src/components/Nav.tsx",
+            "frontend/src/components/GraceBanner.tsx",
+            "frontend/src/components/ProtectedRoute.tsx",
+            "frontend/src/lib/storage.ts",
+            "frontend/src/lib/analytics.ts",
+            "frontend/src/styles/globals.css"
+          ],
+          "test": {
+            "cmd": "cd frontend && npm test -- tests/sessions/s1-f",
+            "file": "frontend/tests/sessions/s1-f.test.ts"
+          },
+          "checkpoint": "A developer can wrap an empty placeholder page in <Layout> + <ProtectedRoute> and the unit tests for frontend/src/api, /auth, /hooks, /components, /lib pass green.",
+          "manualAcs": [
+            {
+              "id": "TECH-VISUAL-1",
+              "text": "Visual chrome (Layout/Nav) renders without runtime errors when wrapped around an empty page."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "integration",
+      "phase": "integration-1",
+      "test": {
+        "cmd": "npm run test:integration"
+      }
+    },
+    {
+      "kind": "feature",
+      "phase": 2,
+      "sessions": [
+        {
+          "id": "S2-A",
+          "brief": "section5-briefs/S2-A-Auth-Endpoints.md",
+          "ownedFiles": [
+            "backend/app/api/routers/auth.py",
+            "backend/app/services/auth_service.py",
+            "backend/app/services/password_reset.py",
+            "tests/integration/test_auth_endpoints.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/integration/test_auth_endpoints.py -v",
+            "file": "tests/integration/test_auth_endpoints.py"
+          },
+          "checkpoint": "POST /auth/register creates a user and free subscription in the database, POST /auth/login with valid credentials returns a JWT access token, and POST /auth/logout returns 204 No Content — all verifiable against the running API without any other Phase 2 session merged.",
+          "manualAcs": []
+        },
+        {
+          "id": "S2-B",
+          "brief": "section5-briefs/S2-B-Drawings-Endpoints-+-SSE-Status.md",
+          "ownedFiles": [
+            "backend/app/api/routers/drawings.py",
+            "backend/app/services/drawing_service.py",
+            "backend/app/services/hash_check_service.py",
+            "backend/app/services/upload_complete_service.py",
+            "backend/app/services/drawing_state_machine.py",
+            "backend/app/services/free_tier_counter.py",
+            "backend/app/sse/drawing_status.py",
+            "tests/integration/test_drawings_api.py",
+            "tests/integration/test_drawings_sse.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/integration/test_drawings_api.py tests/integration/test_drawings_sse.py -v --tb=short",
+            "file": "tests/integration/test_drawings_api.py"
+          },
+          "checkpoint": "Calling POST /drawings/hash-check → POST /drawings → POST /drawings/{id}/upload-complete against the running API creates a Drawing in Queued state, enqueues a task on the ingest Celery queue, emits a drawing_uploaded PostHog event, and GET /drawings/{id}/status streams SSE state transitions.",
+          "manualAcs": [
+            {
+              "id": "US-003-MANUAL-1",
+              "text": "GET /drawings/{id} for authenticated owner returns full drawing detail with 200."
+            },
+            {
+              "id": "US-003-MANUAL-2",
+              "text": "PATCH /drawings/{id} updates revision_label and returns updated record."
+            },
+            {
+              "id": "US-007-MANUAL-1",
+              "text": "GET /drawings query uses idx_drawing_fts GIN index (EXPLAIN shows index scan, not seq scan)."
+            },
+            {
+              "id": "US-009-MANUAL-1",
+              "text": "Deleting a drawing cascades to detected_symbol, table_cell, user_correction, export_record via DB ON DELETE CASCADE."
+            }
+          ]
+        },
+        {
+          "id": "S2-C",
+          "brief": "section5-briefs/S2-C-Symbols-Corrections-Endpoints.md",
+          "ownedFiles": [
+            "backend/app/api/routers/symbols.py",
+            "backend/app/services/symbol_service.py",
+            "backend/app/services/correction_service.py",
+            "tests/integration/test_symbols_api.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/sessions/test_s2c.py -v",
+            "file": "tests/sessions/test_s2c.py"
+          },
+          "checkpoint": "A GET /drawings/{id}/symbols request by the drawing owner returns HTTP 200 with all ML-detected symbols and their correction history in a single response, and a subsequent PATCH /symbols/{id} call with a reclassify action persists the correction, transitions the drawing to Under_Review, fires the correction_action analytics event, and returns HTTP 200 with the updated symbol record.",
+          "manualAcs": []
+        },
+        {
+          "id": "S2-D",
+          "brief": "section5-briefs/S2-D-Export-Endpoints-+-Sync-Path.md",
+          "ownedFiles": [
+            "backend/app/api/routers/exports.py",
+            "backend/app/services/export_service.py",
+            "backend/app/services/export_generators.py",
+            "tests/integration/test_exports_api.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/integration/test_exports_api.py -v",
+            "file": "tests/integration/test_exports_api.py"
+          },
+          "checkpoint": "POST /drawings/{id}/exports for a drawing with 5 symbols returns HTTP 201 with status=Complete and a pre-signed download_url; for a drawing with 1,001 symbols returns HTTP 202 with status=Queued; GET /exports/{id} returns current status and fires export_downloaded analytics when Complete.",
+          "manualAcs": [
+            {
+              "id": "US-017-AC-P1-STUB",
+              "text": "GET /exports/{id}/comparison-csv returns HTTP 501 (P1 stub — not implemented)."
+            }
+          ]
+        },
+        {
+          "id": "S2-E",
+          "brief": "section5-briefs/S2-E-Subscription-+-Stripe-Webhook.md",
+          "ownedFiles": [
+            "backend/app/api/routers/subscription.py",
+            "backend/app/api/routers/stripe_webhook.py",
+            "backend/app/services/stripe_client.py",
+            "backend/app/services/subscription_service.py",
+            "backend/app/services/billing_state_machine.py",
+            "backend/app/services/stripe_event_idempotency.py",
+            "tests/integration/test_subscription.py",
+            "tests/integration/test_stripe_webhook.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/sessions/test_s2_e.py -v",
+            "file": "tests/sessions/test_s2_e.py"
+          },
+          "checkpoint": "GET /subscription returns the authenticated user's current tier and billing state; POST /subscription/checkout returns a valid Stripe Checkout URL; and POST /webhooks/stripe processes checkout.session.completed to upgrade the subscription tier in the DB, invalidate the Redis cache, and return 200.",
+          "manualAcs": [
+            {
+              "id": "US-020-AC-16",
+              "text": "Billing state machine InvalidTransitionError raised for illegal transition (e.g., Canceled → Grace), not silently skipped."
+            },
+            {
+              "id": "US-020-AC-17",
+              "text": "Stripe tier activation (reflected in GET /subscription) occurs within 30 seconds of checkout.session.completed in staging."
+            }
+          ]
+        },
+        {
+          "id": "S2-F",
+          "brief": "section5-briefs/S2-F-Account,-Consent-GDPR-Init-Endpoints.md",
+          "ownedFiles": [
+            "backend/app/api/routers/account.py",
+            "backend/app/services/account_service.py",
+            "backend/app/services/consent_service.py",
+            "backend/app/services/gdpr_init_service.py",
+            "tests/integration/test_account.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/integration/test_account.py -v",
+            "file": "tests/integration/test_account.py"
+          },
+          "checkpoint": "GET /account with a valid JWT returns HTTP 200 with a JSON profile, PATCH /account/consent with {opted_in: true} upserts an ML training consent record, and DELETE /account returns HTTP 204 with user.deleted_at set and a task enqueued on the gdpr_erasure Celery queue.",
+          "manualAcs": []
+        },
+        {
+          "id": "S2-G",
+          "brief": "section5-briefs/S2-G-Entity-Classes-Misc-Endpoints.md",
+          "ownedFiles": [
+            "backend/app/api/routers/entity_classes.py",
+            "backend/app/services/entity_class_service.py",
+            "tests/integration/test_entity_classes.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/integration/test_entity_classes.py -v",
+            "file": "tests/integration/test_entity_classes.py"
+          },
+          "checkpoint": "GET /entity-classes returns 200 OK with all 8 entity-class records (pipe, valve_gate, valve_globe, valve_ball, valve_butterfly, valve_check, valve_control, instrument), and a second call within the same process lifetime is served from Redis under key entity_classes:taxonomy without querying Postgres.",
+          "manualAcs": [
+            {
+              "id": "EC-PUBLIC-1",
+              "text": "Endpoint requires no Authorization header — GET /entity-classes without any token returns 200 (not 401)."
+            },
+            {
+              "id": "EC-PERF-1",
+              "text": "Response is served from a single DB query (no N+1) when cache is cold — verified by query count instrumentation or SQL log inspection."
+            }
+          ]
+        },
+        {
+          "id": "S2-H",
+          "brief": "section5-briefs/S2-H-Ingest-Worker.md",
+          "ownedFiles": [
+            "backend/app/workers/ingest/__init__.py",
+            "backend/app/workers/ingest/tasks.py",
+            "backend/app/workers/ingest/oda_converter.py",
+            "backend/app/workers/ingest/hash_reverify.py",
+            "backend/app/workers/ingest/format_detect.py",
+            "tests/integration/test_ingest_worker.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/integration/test_ingest_worker.py -v",
+            "file": "tests/integration/test_ingest_worker.py"
+          },
+          "checkpoint": "A manually-seeded Queued drawing with a valid PDF in localstack S3 transitions to Scanning in the database and a matching DrawingStatusSSEEvent appears on the Redis drawing:status:{drawing_id} channel when the ingest task is invoked directly, confirmed by pytest tests/integration/test_ingest_worker.py passing green.",
+          "manualAcs": [
+            {
+              "id": "US-003-AC-5-network",
+              "text": "ODA sandbox Docker command includes --network none (no network egress)."
+            },
+            {
+              "id": "US-003-AC-5-nonroot",
+              "text": "ODA sandbox Docker command runs as non-root user."
+            },
+            {
+              "id": "US-003-AC-5-readonly",
+              "text": "ODA sandbox Docker command mounts host filesystem read-only (except temp work dir)."
+            }
+          ]
+        },
+        {
+          "id": "S2-I",
+          "brief": "section5-briefs/S2-I-Scan-Worker-(ClamAV).md",
+          "ownedFiles": [
+            "backend/app/workers/scan/__init__.py",
+            "backend/app/workers/scan/tasks.py",
+            "backend/app/workers/scan/clamav_client.py",
+            "tests/integration/test_scan_worker.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/integration/test_scan_worker.py -v",
+            "file": "tests/integration/test_scan_worker.py"
+          },
+          "checkpoint": "A Drawing record in Scanning state submitted directly to the scan_drawing Celery task transitions to Processing (clean file), Scan_Failed (infected file), or Failed (ClamAV connection error after 3 retries), with a corresponding DrawingStatusSSEEvent verifiable in the Redis drawing:status:{drawing_id} pub/sub channel for each case.",
+          "manualAcs": []
+        },
+        {
+          "id": "S2-J",
+          "brief": "section5-briefs/S2-J-ML-Worker.md",
+          "ownedFiles": [
+            "backend/app/workers/ml/__init__.py",
+            "backend/app/workers/ml/tasks.py",
+            "backend/app/workers/ml/inference.py",
+            "backend/app/workers/ml/model_loader.py",
+            "backend/app/workers/ml/result_persistence.py",
+            "tests/integration/test_ml_worker.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/integration/test_ml_worker.py -v",
+            "file": "tests/integration/test_ml_worker.py"
+          },
+          "checkpoint": "Calling the run_ml_inference Celery task directly with a valid MLInferenceJobPayload for a Processing drawing results in detected symbols written to detected_symbol, drawing.processing_state set to Complete in PostgreSQL, a DrawingStatusSSEEvent published to the drawing:status:{drawing_id} Redis channel, and emit_processing_complete invoked with user_id from the job payload.",
+          "manualAcs": [
+            {
+              "id": "US-008-AC-7-scan-failed",
+              "text": "Scan_Failed drawings are not processed; task no-ops if drawing is in Scan_Failed state."
+            },
+            {
+              "id": "US-008-AC-5",
+              "text": "Task is configured with soft_time_limit and time_limit derived from ML_JOB_TIMEOUT_SECONDS (default 1200s); SoftTimeLimitExceeded is caught and triggers the retry/failure path."
+            },
+            {
+              "id": "ENV-STARTUP",
+              "text": "Worker process refuses to start if ML_MODEL_S3_KEY, DATABASE_URL, REDIS_URL, or S3_BUCKET_NAME are absent from the environment."
+            },
+            {
+              "id": "US-010-AC-1-static",
+              "text": "No user_id DB lookup occurs anywhere in tasks.py, result_persistence.py, or inference.py (verified by static code review or grep)."
+            }
+          ]
+        },
+        {
+          "id": "S2-K",
+          "brief": "section5-briefs/S2-K-Export-Worker-(Async).md",
+          "ownedFiles": [
+            "backend/app/workers/export/__init__.py",
+            "backend/app/workers/export/tasks.py",
+            "tests/integration/test_export_worker.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/integration/test_export_worker.py -v",
+            "file": "tests/integration/test_export_worker.py"
+          },
+          "checkpoint": "Running `pytest tests/integration/test_export_worker.py -v` reports all 25 tests passing, confirming the async export Celery task correctly transitions an ExportRecord from Queued through Generating to Complete (or Failed), writes a valid CSV/XLSX to S3, creates a StoredFile record, and publishes the expected Redis notification payload to export:status:{export_id}.",
+          "manualAcs": [
+            {
+              "id": "US-017-AC-8",
+              "text": "Each export task creates a new stored_file row; existing stored_file records for the same drawing are not overwritten."
+            }
+          ]
+        },
+        {
+          "id": "S2-L",
+          "brief": "section5-briefs/S2-L-GDPR-Erasure-Worker.md",
+          "ownedFiles": [
+            "backend/app/workers/gdpr/__init__.py",
+            "backend/app/workers/gdpr/tasks.py",
+            "backend/app/workers/gdpr/anonymizer.py",
+            "tests/integration/test_gdpr_worker.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/integration/test_gdpr_worker.py -v",
+            "file": "tests/integration/test_gdpr_worker.py"
+          },
+          "checkpoint": "A user record with deleted_at set 31 days ago is fully anonymized after calling erase_user_pii(user_id): user.anonymous_id is populated with the HMAC-SHA256 hex digest, user.email is replaced with the erased placeholder, user.password_hash is NULL, and all audit_log rows for that user have user_id set to NULL.",
+          "manualAcs": []
+        },
+        {
+          "id": "S2-M",
+          "brief": "section5-briefs/S2-M-Notification-Worker-(SendGrid).md",
+          "ownedFiles": [
+            "backend/app/workers/notification/__init__.py",
+            "backend/app/workers/notification/tasks.py",
+            "backend/app/workers/notification/sendgrid_client.py",
+            "backend/app/workers/notification/templates.py",
+            "tests/integration/test_notification_worker.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/integration/test_notification_worker.py -v",
+            "file": "tests/integration/test_notification_worker.py"
+          },
+          "checkpoint": "The four P0 Celery notification tasks (send_verification_email, send_password_reset_email, send_grace_day1_email, send_grace_day6_email) are registered on the 'notification' queue and deliver transactional emails with correct content when executed against a live SendGrid API key.",
+          "manualAcs": []
+        }
+      ]
+    },
+    {
+      "kind": "integration",
+      "phase": "integration-2",
+      "test": {
+        "cmd": "npm run test:integration"
+      }
+    },
+    {
+      "kind": "feature",
+      "phase": 3,
+      "sessions": [
+        {
+          "id": "S3-A",
+          "brief": "section5-briefs/S3-A-Frontend-Auth-Pages.md",
+          "ownedFiles": [
+            "frontend/src/pages/auth/Register.tsx",
+            "frontend/src/pages/auth/Login.tsx",
+            "frontend/src/pages/auth/VerifyEmail.tsx",
+            "frontend/src/pages/auth/PasswordResetRequest.tsx",
+            "frontend/src/pages/auth/PasswordResetConfirm.tsx",
+            "frontend/src/pages/auth/OAuthCallback.tsx",
+            "frontend/src/pages/auth/AccountLinkPrompt.tsx"
+          ],
+          "test": {
+            "cmd": "cd frontend && npx vitest run tests/sessions/S3-A.test.tsx",
+            "file": "frontend/tests/sessions/S3-A.test.tsx"
+          },
+          "checkpoint": "Navigating to /register renders a working registration form; submitting valid inputs transitions to /verify-email; navigating to /login and submitting valid credentials redirects to /dashboard; clicking 'Sign in with Google' calls supabase.auth.signInWithOAuth; an already-authenticated user visiting /login is immediately redirected to /dashboard.",
+          "manualAcs": [
+            {
+              "id": "US-002-AC-4",
+              "text": "The lockout display state does not persist across a full page reload; the server remains the authoritative source of lockout state, re-surfaced only via the next 429 response."
+            }
+          ]
+        },
+        {
+          "id": "S3-B",
+          "brief": "section5-briefs/S3-B-Frontend-Drawing-Library.md",
+          "ownedFiles": [
+            "frontend/src/pages/Dashboard.tsx",
+            "frontend/src/features/library/DrawingList.tsx",
+            "frontend/src/features/library/DrawingRow.tsx",
+            "frontend/src/features/library/StatusBadge.tsx",
+            "frontend/src/features/library/SearchFilter.tsx",
+            "frontend/src/features/library/Pagination.tsx",
+            "frontend/src/features/library/useDrawings.ts"
+          ],
+          "test": {
+            "cmd": "cd frontend && npx vitest run ../../tests/sessions/S3-B.test.tsx",
+            "file": "tests/sessions/S3-B.test.tsx"
+          },
+          "checkpoint": "Navigating to /dashboard as an authenticated user renders a paginated, searchable drawing library with color-coded status badges, Retry/Delete actions, and automatic polling that updates a drawing's badge from Processing to Complete within 10 seconds without a page reload.",
+          "manualAcs": [
+            {
+              "id": "US-006-AC-MANUAL-1",
+              "text": "GraceBanner is rendered when user.billing_state === 'Grace' and graceBannerDismissed sessionStorage key is absent."
+            },
+            {
+              "id": "US-006-AC-MANUAL-2",
+              "text": "Dismissing GraceBanner sets graceBannerDismissed=true in sessionStorage and hides the banner for the session."
+            },
+            {
+              "id": "US-006-AC-MANUAL-3",
+              "text": "Skeleton loading rows are shown during the initial list fetch before the first API response arrives."
+            },
+            {
+              "id": "US-006-AC-MANUAL-4",
+              "text": "On viewports narrower than 768px, the page_count column is hidden from the drawing list."
+            }
+          ]
+        },
+        {
+          "id": "S3-C",
+          "brief": "section5-briefs/S3-C-Frontend-Upload-Flow.md",
+          "ownedFiles": [
+            "frontend/src/pages/Upload.tsx",
+            "frontend/src/features/upload/DropZone.tsx",
+            "frontend/src/features/upload/hashClient.ts",
+            "frontend/src/features/upload/uploadOrchestrator.ts",
+            "frontend/src/features/upload/UploadProgress.tsx"
+          ],
+          "test": {
+            "cmd": "cd frontend && npx vitest run tests/sessions/S3-C",
+            "file": "tests/sessions/S3-C.test.ts"
+          },
+          "checkpoint": "Users on /upload can drag-and-drop or browse-select a .pdf or .dwg file, see a real-time upload progress bar as bytes transfer to S3, and land on /dashboard after upload completes — or see an inline upgrade prompt if they have exhausted their free-tier monthly limit — with blocked files (hash-check 409) stopped before any Drawing record is created.",
+          "manualAcs": [
+            {
+              "id": "US-003-AC-MANUAL-1",
+              "text": "/upload page is wrapped in ProtectedRoute; unauthenticated access redirects to /login."
+            },
+            {
+              "id": "US-003-AC-MANUAL-2",
+              "text": "DropZone is keyboard-focusable and activatable with Enter/Space to open the native file picker."
+            },
+            {
+              "id": "US-003-AC-MANUAL-3",
+              "text": "aria-live='polite' region announces upload state transitions to screen readers."
+            },
+            {
+              "id": "US-003-AC-MANUAL-4",
+              "text": "Progress bar uses role='progressbar' with aria-valuenow updated during upload."
+            }
+          ]
+        },
+        {
+          "id": "S3-D",
+          "brief": "section5-briefs/S3-D-Frontend-Review-Canvas-(Konva).md",
+          "ownedFiles": [
+            "frontend/src/pages/Review.tsx",
+            "frontend/src/features/canvas/Canvas.tsx",
+            "frontend/src/features/canvas/SymbolLayer.tsx",
+            "frontend/src/features/canvas/BoundingBox.tsx",
+            "frontend/src/features/canvas/PageNav.tsx",
+            "frontend/src/features/canvas/InspectionPanel.tsx",
+            "frontend/src/features/canvas/ManualAnnotate.tsx",
+            "frontend/src/features/canvas/CorrectionStore.ts",
+            "frontend/src/features/canvas/useCanvasShortcuts.ts"
+          ],
+          "test": {
+            "cmd": "npm test -- tests/sessions/S3-D",
+            "file": "tests/sessions/S3-D.test.tsx"
+          },
+          "checkpoint": "Navigating to /drawings/{id}/review renders a Konva canvas with color-coded bounding box overlays; clicking a symbol opens the inspection panel instantly with entity class, confidence, and correction history; submitting a reclassification updates the bounding box color optimistically and shows a 'Saved' indicator.",
+          "manualAcs": [
+            {
+              "id": "US-012-AC-6-keyboard-escape",
+              "text": "Keyboard shortcut Escape deselects current symbol and exits annotate mode."
+            },
+            {
+              "id": "US-013-AC-keyboard-delete",
+              "text": "Keyboard shortcut Delete/Backspace rejects the selected symbol."
+            },
+            {
+              "id": "US-012-AC-keyboard-arrows",
+              "text": "Keyboard shortcuts ArrowLeft/ArrowRight navigate pages when page_count > 1 and no input is focused."
+            },
+            {
+              "id": "US-014-AC-keyboard-a",
+              "text": "Keyboard shortcut 'a' toggles annotate mode."
+            },
+            {
+              "id": "US-021-P1-stub",
+              "text": "P1 stub components TableRegionLayer and TableCellInspectionPanel are exported as no-op components with // P1 STUB comments."
+            }
+          ]
+        },
+        {
+          "id": "S3-E",
+          "brief": "section5-briefs/S3-E-Frontend-Account-Consent.md",
+          "ownedFiles": [
+            "frontend/src/pages/Account.tsx",
+            "frontend/src/features/account/ProfileForm.tsx",
+            "frontend/src/features/account/ConsentToggle.tsx",
+            "frontend/src/features/account/DeleteAccount.tsx"
+          ],
+          "test": {
+            "cmd": "cd frontend && npx vitest run ../../tests/sessions/S3-E.test.tsx",
+            "file": "tests/sessions/S3-E.test.tsx"
+          },
+          "checkpoint": "An authenticated user navigating to /account sees their display name, email, and ML consent toggle pre-populated from the API; can save profile changes with success feedback; can toggle consent (or sees a 'Managed by your team' disabled state); and clicking Delete Account then confirming signs them out and redirects to /.",
+          "manualAcs": []
+        },
+        {
+          "id": "S3-F",
+          "brief": "section5-briefs/S3-F-Frontend-Subscription-Upgrade.md",
+          "ownedFiles": [
+            "frontend/src/pages/Subscription.tsx",
+            "frontend/src/features/subscription/TierCard.tsx",
+            "frontend/src/features/subscription/CheckoutRedirect.tsx",
+            "frontend/src/features/subscription/UpgradePrompt.tsx",
+            "frontend/src/features/subscription/PendingState.tsx"
+          ],
+          "test": {
+            "cmd": "npm test -- tests/sessions/S3-F",
+            "file": "tests/sessions/S3-F.test.tsx"
+          },
+          "checkpoint": "Navigating to /subscription as a logged-in free-tier user displays three tier cards with Free highlighted as 'Current Plan', Pro and Team showing 'Upgrade' CTAs, locked feature rows for revision_comparison and team_library, and a working upgrade flow that redirects to https://checkout.stripe.com/… on CTA click.",
+          "manualAcs": [
+            {
+              "id": "US-019-AC-6",
+              "text": "A downgrade CTA displays confirmation text that the change will take effect at the end of the current billing period (current_period_end), not immediately; no POST /subscription/checkout is called immediately — downgrade initiation is a P1 Customer Portal redirect; this story covers the deferred-period-end messaging display only."
+            }
+          ]
+        },
+        {
+          "id": "S3-G",
+          "brief": "section5-briefs/S3-G-Frontend-Exports-UI-+-Notifications.md",
+          "ownedFiles": [
+            "frontend/src/features/exports/ExportButton.tsx",
+            "frontend/src/features/exports/ExportModal.tsx",
+            "frontend/src/features/exports/useExportStatus.ts",
+            "frontend/src/features/notifications/InAppNotifications.tsx",
+            "frontend/src/features/notifications/notificationsStore.ts"
+          ],
+          "test": {
+            "cmd": "npm test -- --run tests/sessions/s3-g",
+            "file": "tests/sessions/s3-g.test.tsx"
+          },
+          "checkpoint": "On the /drawings/{id}/review page, clicking the Export button opens a modal where selecting CSV or XLSX and confirming either immediately shows a Download link (sync path) or shows an async-queued message and later displays a download notification in the top-right notification tray.",
+          "manualAcs": []
+        },
+        {
+          "id": "S3-H",
+          "brief": "section5-briefs/S3-H-Marketing-Site-(Next.js).md",
+          "ownedFiles": [
+            "marketing/app/(marketing)/page.tsx",
+            "marketing/app/pricing/page.tsx",
+            "marketing/app/about/page.tsx",
+            "marketing/app/contact/page.tsx",
+            "marketing/components/Hero.tsx",
+            "marketing/components/PricingTable.tsx",
+            "marketing/components/Footer.tsx",
+            "marketing/public/robots.txt",
+            "marketing/public/sitemap.xml"
+          ],
+          "test": {
+            "cmd": "cd marketing && npx jest --config jest.config.ts tests/sessions/S3-H.test.tsx",
+            "file": "tests/sessions/S3-H.test.tsx"
+          },
+          "checkpoint": "Visiting /pricing via curl returns fully server-rendered HTML with a three-tier pricing table (Free/Pro/Team), and /robots.txt and /sitemap.xml return valid SEO files.",
+          "manualAcs": [
+            {
+              "id": "SITE-6-AC-1-conflict",
+              "text": "app/(marketing)/page.tsx and app/page.tsx (S0-A stub) coexist without a Next.js build error — verify that `next build` completes without duplicate-route conflict."
+            },
+            {
+              "id": "SITE-6-AC-1-ssr",
+              "text": "All four pages (/, /pricing, /about, /contact) render meaningful HTML visible via `curl` without executing JavaScript — confirmed by running `curl -s <url> | grep -c '<h'` returning a non-zero count."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "integration",
+      "phase": "integration-3",
+      "test": {
+        "cmd": "npm run test:integration"
+      }
+    },
+    {
+      "kind": "feature",
+      "phase": 4,
+      "sessions": [
+        {
+          "id": "S4-A",
+          "brief": "section5-briefs/S4-A-E2E-Integration-Tests.md",
+          "ownedFiles": [
+            "tests/integration/e2e/test_upload_to_complete.py",
+            "tests/integration/e2e/test_correction_flow.py",
+            "tests/integration/e2e/test_export_sync_and_async.py",
+            "tests/integration/e2e/test_stripe_lifecycle.py",
+            "tests/integration/e2e/test_gdpr_erasure.py",
+            "tests/integration/e2e/test_blocklist_two_gate.py",
+            "tests/integration/e2e/test_free_tier_limit.py"
+          ],
+          "test": {
+            "cmd": "pytest tests/integration/e2e/ -v --tb=short",
+            "file": "tests/integration/e2e/"
+          },
+          "checkpoint": "Running `pytest tests/integration/e2e/ -v` against the fully integrated system exits 0, with all 66 test cases passing, demonstrating that upload-to-complete, correction, export, billing, GDPR, blocklist, and free-tier flows operate correctly end-to-end.",
+          "manualAcs": [
+            {
+              "id": "E2E-005-AC-8",
+              "text": "Drawings owned by erased user are handled per erasure policy (deleted or reassigned) — requires reviewing data in test DB post-erasure."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "integration",
+      "phase": "integration-4",
+      "test": {
+        "cmd": "npm run test:integration"
+      }
+    }
+  ]
+}

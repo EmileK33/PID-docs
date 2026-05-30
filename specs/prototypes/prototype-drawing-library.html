@@ -1,0 +1,733 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drawing Library - PID Analyzer</title>
+  <style>
+    :root {
+    --sidebar-width: 240px;
+    --sidebar-bg: #111827;
+    --sidebar-text: #D1D5DB;
+    --sidebar-active-bg: #1F2937;
+    --sidebar-active-text: #FFFFFF;
+    --sidebar-active-border: #3B82F6;
+    --header-height: 56px;
+    --content-bg: #F9FAFB;
+  }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      display: flex;
+      min-height: 100vh;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--content-bg);
+      font-size: 14px;
+      color: #111827;
+    }
+    .sidebar {
+      width: var(--sidebar-width);
+      min-height: 100vh;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      overflow-y: auto;
+      z-index: 20;
+    }
+    .sidebar-logo {
+      padding: 16px 20px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #FFFFFF;
+      border-bottom: 1px solid #374151;
+      flex-shrink: 0;
+    }
+    .sidebar nav { padding: 8px; flex: 1; }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 2px;
+      border-left: 3px solid transparent;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sidebar nav a:hover { background: #1F2937; color: #FFFFFF; }
+    .sidebar nav a.active {
+      background: var(--sidebar-active-bg);
+      color: var(--sidebar-active-text);
+      border-left-color: var(--sidebar-active-border);
+      font-weight: 600;
+    }
+    .main-wrapper {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .top-bar {
+      height: var(--header-height);
+      background: #FFFFFF;
+      border-bottom: 1px solid #E5E7EB;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .main-content { padding: 24px; flex: 1; }
+    
+    /* Grace Period Banner */
+    .grace-period-banner {
+      position: sticky;
+      top: 56px;
+      z-index: 9;
+      background: #FEF3C7;
+      border-left: 4px solid #F59E0B;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #92400E;
+      gap: 16px;
+    }
+    .grace-period-banner.hidden { display: none; }
+    .grace-period-banner a {
+      color: #92400E;
+      text-decoration: underline;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .grace-period-banner button {
+      background: none;
+      border: none;
+      color: #92400E;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    
+    /* Search & Filter Bar */
+    .search-filter-bar {
+      background: #FFFFFF;
+      border-bottom: 1px solid #E5E7EB;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .search-input {
+      width: 320px;
+      height: 36px;
+      padding: 8px 12px;
+      border: 1px solid #E5E7EB;
+      border-radius: 6px;
+      font-size: 13px;
+      transition: border-color 0.15s;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: #3B82F6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .filter-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .filter-select, .date-input {
+      height: 36px;
+      padding: 8px 12px;
+      border: 1px solid #E5E7EB;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #FFFFFF;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .filter-select:focus, .date-input:focus {
+      outline: none;
+      border-color: #3B82F6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .filter-badge {
+      display: inline-block;
+      background: #3B82F6;
+      color: #FFFFFF;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    /* Free Tier Banner */
+    .free-tier-banner {
+      background: #FFFFFF;
+      border-left: 4px solid #F59E0B;
+      border-bottom: 1px solid #E5E7EB;
+      padding: 16px 24px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .free-tier-banner.hidden { display: none; }
+    .free-tier-text {
+      font-size: 13px;
+      color: #6B7280;
+    }
+    .free-tier-link {
+      color: #3B82F6;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    .free-tier-link:hover { text-decoration: underline; }
+    
+    /* Table */
+    .table-container {
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead {
+      background: #F9FAFB;
+      border-bottom: 1px solid #E5E7EB;
+    }
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6B7280;
+    }
+    td {
+      padding: 16px;
+      border-bottom: 1px solid #E5E7EB;
+      font-size: 13px;
+    }
+    tbody tr:hover {
+      background: #F9FAFB;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    
+    /* Filename & Revision */
+    .filename {
+      font-weight: 500;
+      color: #111827;
+    }
+    .revision-cell {
+      position: relative;
+    }
+    .revision-label {
+      color: #6B7280;
+      padding: 4px 0;
+    }
+    .revision-input {
+      width: 120px;
+      padding: 6px 8px;
+      border: 1px solid #3B82F6;
+      border-radius: 4px;
+      font-size: 13px;
+      display: none;
+    }
+    .revision-input.active {
+      display: inline-block;
+    }
+    .revision-label:hover::after {
+      content: '✎';
+      margin-left: 8px;
+      color: #6B7280;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    /* Status Badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .status-badge.queued {
+      background: #F3F4F6;
+      color: var(--color-status-queued);
+    }
+    .status-badge.processing {
+      background: #DBEAFE;
+      color: var(--color-status-processing);
+    }
+    .status-badge.complete {
+      background: var(--badge-complete-bg);
+      color: var(--badge-complete-text);
+    }
+    .status-badge.failed {
+      background: var(--badge-failed-bg);
+      color: var(--badge-failed-text);
+    }
+    .status-badge.scan-failed {
+      background: var(--badge-scan-failed-bg);
+      color: var(--badge-scan-failed-text);
+    }
+    
+    /* Spinner for Processing */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(59, 130, 246, 0.3);
+      border-top-color: var(--color-status-processing);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    /* Save Indicator */
+    .save-indicator {
+      display: inline-block;
+      color: #10B981;
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0;
+      animation: fadeInOut 2s ease;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .save-indicator.show {
+      display: inline-block;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .icon-btn {
+      background: none;
+      border: none;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 6px;
+      color: #6B7280;
+      transition: background 0.15s, color 0.15s;
+    }
+    .icon-btn:hover {
+      background: #EFF6FF;
+      color: #3B82F6;
+    }
+    .icon-btn.delete:hover {
+      background: #FEE2E2;
+      color: #EF4444;
+    }
+    .icon-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+    .icon-btn[title]::after {
+      content: attr(title);
+      position: absolute;
+      bottom: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111827;
+      color: #FFFFFF;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+    }
+    .icon-btn:hover[title]::after {
+      opacity: 1;
+    }
+    
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 24px;
+      background: #FFFFFF;
+      border-top: 1px solid #E5E7EB;
+      margin-top: 16px;
+    }
+    .pagination-btn {
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .pagination-btn:hover:not(:disabled) {
+      background: #EFF6FF;
+      border-color: #3B82F6;
+    }
+    .pagination-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .pagination-info {
+      font-size: 13px;
+      color: #6B7280;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 80px 24px;
+      display: none;
+    }
+    .empty-state.show {
+      display: block;
+    }
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+    .empty-state-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+    .empty-state-text {
+      color: #6B7280;
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+    .empty-state-btn {
+      background: #3B82F6;
+      color: #FFFFFF;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    .empty-state-btn:hover {
+      background: #2563EB;
+    }
+    
+    /* Confirmation Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+    }
+    .modal-overlay.show {
+      display: flex;
+    }
+    .modal {
+      background: #FFFFFF;
+      border-radius: 8px;
+      padding: 32px;
+      max-width: 480px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .modal-header {
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 12px;
+    }
+    .modal-text {
+      color: #6B7280;
+      font-size: 13px;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .modal-filename {
+      font-weight: 600;
+      color: #111827;
+      word-break: break-word;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    .modal-btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      transition: all 0.15s;
+    }
+    .modal-btn.primary {
+      background: #EF4444;
+      color: #FFFFFF;
+    }
+    .modal-btn.primary:hover {
+      background: #DC2626;
+    }
+    .modal-btn.secondary {
+      background: #E5E7EB;
+      color: #111827;
+    }
+    .modal-btn.secondary:hover {
+      background: #D1D5DB;
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      background: #FFFFFF;
+      border-left: 4px solid #10B981;
+      border-radius: 6px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      font-size: 13px;
+      color: #111827;
+      display: none;
+      max-width: 320px;
+      z-index: 40;
+      animation: slideIn 0.3s ease;
+    }
+    .toast.show {
+      display: block;
+    }
+    .toast.error {
+      border-left-color: #EF4444;
+    }
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    .toast-close {
+      float: right;
+      background: none;
+      border: none;
+      color: #6B7280;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0;
+      line-height: 1;
+    }
+    
+    /* Header Actions */
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .header-btn {
+      background: #3B82F6;
+      color: #FFFFFF;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    .header-btn:hover {
+      background: #2563EB;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+  <div class="sidebar-logo">PID</div>
+  <nav id="sidebar-nav">
+    <a href="prototype-drawing-library.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Drawing Library
+    </a>
+    <a href="prototype-file-upload.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+      File Upload Drop Zone
+    </a>
+    <a href="prototype-review-canvas.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Drawing Review Canvas
+    </a>
+    <a href="prototype-symbol-detail-panel.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Symbol Detail & Reclassification Panel
+    </a>
+    <a href="prototype-export-modal.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+      Export Download Modal
+    </a>
+    <a href="prototype-account-settings.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Account Settings
+    </a>
+    <a href="prototype-subscription-upgrade.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+      Subscription & Upgrade Prompt
+    </a>
+  </nav>
+</aside>
+  <div class="main-wrapper">
+    <div class="top-bar">
+      <h1 style="font-size:16px;font-weight:600;color:#111827;flex:1">Drawing Library</h1>
+      <div class="header-actions">
+        <button class="header-btn" onclick="navigateToUpload()">New Upload</button>
+      </div>
+    </div>
+    
+    <!-- Grace Period Banner -->
+    <div id="gracePeriodBanner" class="grace-period-banner hidden">
+      <span>Your payment failed — your account enters read-only mode in <strong id="graceDaysRemaining">7</strong> days. <a href="prototype-subscription-upgrade.html">Update billing →</a></span>
+      <button onclick="dismissGraceBanner()" aria-label="Dismiss billing warning">×</button>
+    </div>
+    
+    <main class="main-content">
+      <!-- Search & Filter Bar -->
+      <div class="search-filter-bar">
+        <input type="text" class="search-input" placeholder="Search by filename..." id="searchInput" onkeyup="debounceSearch()">
+        <div class="filter-group">
+          <select class="filter-select" id="statusFilter" onchange="applyFilters()">
+            <option value="">All Status</option>
+            <option value="queued">Queued</option>
+            <option value="processing">Processing</option>
+            <option value="complete">Complete</option>
+            <option value="failed">Failed</option>
+            <option value="scan_failed">Scan Failed</option>
+          </select>
+          <input type="date" class="date-input" id="startDate" onchange="applyFilters()" placeholder="Start Date">
+          <input type="date" class="date-input" id="endDate" onchange="applyFilters()" placeholder="End Date">
+          <span id="filterCount" class="filter-badge" style="display:none;">0 filters</span>
+        </div>
+      </div>
+      
+      <!-- Free Tier Banner -->
+      <div id="freeTierBanner" class="free-tier-banner hidden">
+        <span class="free-tier-text">
+          <strong id="freeUsageText">2 of 3</strong> drawings processed this month
+          <a href="prototype-subscription-upgrade.html" class="free-tier-link">Upgrade →</a>
+        </span>
+      </div>
+      
+      <!-- Table -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 30%;">Filename</th>
+              <th style="width: 12%;">Revision</th>
+              <th style="width: 12%;">Uploaded</th>
+              <th style="width: 15%;">Status</th>
+              <th style="width: 15%;">Uploader</th>
+              <th style="width: 16%;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+          </tbody>
+        </table>
+        <div id="emptyState" class="empty-state">
+          <div class="empty-state-icon">📄</div>
+          <div class="empty-state-title">No drawings yet</div>
+          <div class="empty-state-text">Upload your first P&ID drawing to get started with symbol detection and validation.</div>
+          <button class="empty-state-btn" onclick="navigateToUpload()">Upload your first drawing</button>
+        </div>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="pagination">
+        <button class="pagination-btn" id="prevBtn" onclick="previousPage()" disabled>← Previous</button>
+        <span class="pagination-info">
+          Page <span id="currentPage">1</span> of <span id="totalPages">1</span> · <span id="recordCount">0</span> records
+        </span>
+        <button class="pagination-btn" id="nextBtn" onclick="nextPage()" disabled>Next →</button>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Confirmation Modal -->
+  <div id="confirmationModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">Delete Drawing</div>
+      <div class="modal-text">
+        Are you sure you want to delete <span class="modal-filename" id="deleteFilename"></span>? This action cannot be undone.
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="closeConfirmation()">Cancel</button>
+        <button class="modal-btn primary" onclick="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">
+    <button class="toast-close" onclick="closeToast()">×</button>
+    <span id="toastMessage"></span>
+  </div>
+
+  <script>
+  (function () {
+    var path = window.location.pathname.split('/').pop() || '';
+    document.querySelectorAll('#sidebar-nav a').forEach(function (link) {
+      if (link.getAttribute('href') === path) link.classList.add('active');
+    });
+  })();
+</script>
+</body>
+</html>
+```

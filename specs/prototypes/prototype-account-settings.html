@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Settings - PID Analyzer</title>
+  <style>
+    :root {
+    --sidebar-width: 240px;
+    --sidebar-bg: #111827;
+    --sidebar-text: #D1D5DB;
+    --sidebar-active-bg: #1F2937;
+    --sidebar-active-text: #FFFFFF;
+    --sidebar-active-border: #3B82F6;
+    --header-height: 56px;
+    --content-bg: #F9FAFB;
+  }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      display: flex;
+      min-height: 100vh;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--content-bg);
+    }
+    .sidebar {
+      width: var(--sidebar-width);
+      min-height: 100vh;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      overflow-y: auto;
+      z-index: 20;
+    }
+    .sidebar-logo {
+      padding: 16px 20px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #FFFFFF;
+      border-bottom: 1px solid #374151;
+      flex-shrink: 0;
+    }
+    .sidebar nav { padding: 8px; flex: 1; }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 2px;
+      border-left: 3px solid transparent;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sidebar nav a:hover { background: #1F2937; color: #FFFFFF; }
+    .sidebar nav a.active {
+      background: var(--sidebar-active-bg);
+      color: var(--sidebar-active-text);
+      border-left-color: var(--sidebar-active-border);
+      font-weight: 600;
+    }
+    .main-wrapper {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .top-bar {
+      height: var(--header-height);
+      background: #FFFFFF;
+      border-bottom: 1px solid #E5E7EB;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .main-content { padding: 24px; flex: 1; }
+
+    /* Page-specific styles */
+    .settings-container {
+      max-width: 1000px;
+      display: flex;
+      gap: 32px;
+    }
+
+    .settings-tabs {
+      width: 200px;
+      flex-shrink: 0;
+    }
+
+    .settings-tabs a {
+      display: block;
+      padding: 12px 16px;
+      margin-bottom: 4px;
+      text-decoration: none;
+      color: #6B7280;
+      font-size: 14px;
+      font-weight: 500;
+      border-left: 3px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .settings-tabs a:hover {
+      background: #F3F4F6;
+      color: #374151;
+    }
+
+    .settings-tabs a.active {
+      background: #EFF6FF;
+      color: #1E40AF;
+      border-left-color: #3B82F6;
+      font-weight: 600;
+    }
+
+    .settings-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .settings-section {
+      display: none;
+    }
+
+    .settings-section.active {
+      display: block;
+    }
+
+    .settings-section h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group input[type="password"] {
+      padding: 10px 12px;
+      border: 1px solid #E5E7EB;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #111827;
+      max-width: 400px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #3B82F6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-group input:disabled {
+      background: #F9FAFB;
+      color: #9CA3AF;
+      cursor: not-allowed;
+    }
+
+    .form-group .error-text {
+      color: #EF4444;
+      font-size: 12px;
+      margin-top: 6px;
+      display: none;
+    }
+
+    .form-group.error input {
+      border-color: #EF4444;
+    }
+
+    .form-group.error .error-text {
+      display: block;
+    }
+
+    .form-group .help-text {
+      color: #6B7280;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .verification-notice {
+      background: #FEF3C7;
+      border: 1px solid #FCD34D;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 13px;
+      color: #92400E;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .verification-notice.show {
+      display: block;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      background: #3B82F6;
+      color: #FFFFFF;
+    }
+
+    .btn-primary:hover {
+      background: #2563EB;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-primary:disabled {
+      background: #E5E7EB;
+      color: #9CA3AF;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-secondary {
+      background: #FFFFFF;
+      color: #374151;
+      border: 1px solid #E5E7EB;
+    }
+
+    .btn-secondary:hover {
+      background: #F9FAFB;
+      border-color: #D1D5DB;
+    }
+
+    .btn-danger {
+      background: #FFFFFF;
+      color: #DC2626;
+      border: 1px solid #FCA5A5;
+    }
+
+    .btn-danger:hover {
+      background: #FEF2F2;
+      border-color: #FBCFE8;
+    }
+
+    .consent-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 48px;
+      height: 28px;
+      background: #D1D5DB;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle-switch.checked {
+      background: #3B82F6;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: #FFFFFF;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: left 0.2s;
+    }
+
+    .toggle-switch.checked::after {
+      left: 22px;
+    }
+
+    .consent-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .consent-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #111827;
+    }
+
+    .consent-description {
+      font-size: 13px;
+      color: #6B7280;
+    }
+
+    .admin-override-notice {
+      background: #F9FAFB;
+      border-left: 3px solid #D1D5DB;
+      padding: 12px;
+      margin-top: 12px;
+      font-size: 13px;
+      color: #6B7280;
+      font-style: italic;
+    }
+
+    .danger-zone {
+      background: #FEF2F2;
+      border: 1px solid #FBCFE8;
+      border-radius: 6px;
+      padding: 24px;
+      margin-top: 24px;
+    }
+
+    .danger-zone h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #DC2626;
+      margin-bottom: 12px;
+    }
+
+    .danger-zone p {
+      font-size: 13px;
+      color: #7F1D1D;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .divider {
+      height: 1px;
+      background: #E5E7EB;
+      margin: 24px 0;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 30;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: #FFFFFF;
+      border-radius: 8px;
+      padding: 32px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 16px;
+    }
+
+    .modal p {
+      font-size: 14px;
+      color: #6B7280;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .toast {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      background: #FFFFFF;
+      border-left: 4px solid #10B981;
+      border-radius: 6px;
+      padding: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      font-size: 14px;
+      color: #065F46;
+      display: none;
+      z-index: 40;
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast.show {
+      display: block;
+    }
+
+    .toast.error {
+      border-left-color: #EF4444;
+      color: #7F1D1D;
+    }
+
+    .toast.success {
+      border-left-color: #10B981;
+      color: #065F46;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .section-divider {
+      border-top: 1px solid #E5E7EB;
+      margin: 32px 0;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+  <div class="sidebar-logo">PID</div>
+  <nav id="sidebar-nav">
+    <a href="prototype-drawing-library.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Drawing Library
+    </a>
+    <a href="prototype-file-upload.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+      File Upload Drop Zone
+    </a>
+    <a href="prototype-review-canvas.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Drawing Review Canvas
+    </a>
+    <a href="prototype-symbol-detail-panel.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Symbol Detail & Reclassification Panel
+    </a>
+    <a href="prototype-export-modal.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+      Export Download Modal
+    </a>
+    <a href="prototype-account-settings.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Account Settings
+    </a>
+    <a href="prototype-subscription-upgrade.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+      Subscription & Upgrade Prompt
+    </a>
+  </nav>
+</aside>
+
+  <div class="main-wrapper">
+    <div class="top-bar">
+      <h1 style="font-size:16px;font-weight:600;color:#111827;flex:1">Account Settings</h1>
+    </div>
+
+    <main class="main-content">
+      <div class="settings-container">
+        <div class="settings-tabs">
+          <a class="tab-link active" data-tab="profile" onclick="switchTab('profile', event)">Profile</a>
+          <a class="tab-link" data-tab="privacy" onclick="switchTab('privacy', event)">Privacy & Data</a>
+          <a class="tab-link" data-tab="danger" onclick="switchTab('danger', event)">Danger Zone</a>
+        </div>
+
+        <div class="settings-content">
+          <!-- Profile Tab -->
+          <section class="settings-section active" id="profile-section">
+            <h2>Profile Settings</h2>
+
+            <div class="form-group">
+              <label for="display-name">Display Name</label>
+              <input type="text" id="display-name" placeholder="e.g., Marcus Chen" value="Marcus Chen">
+              <span class="error-text">Display name cannot be empty</span>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-primary" onclick="saveDisplayName()">Save</button>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="form-group">
+              <label for="email-address">Email Address</label>
+              <input type="email" id="email-address" placeholder="marcus.chen@acmecorp.com" value="marcus.chen@acmecorp.com">
+              <span class="error-text">Please enter a valid email address</span>
+              <div class="verification-notice" id="email-verification-notice">
+                ✓ Verification email sent to your new address. Your current email remains active until you verify the new address.
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-primary" onclick="changeEmail()">Save</button>
+            </div>
+          </section>
+
+          <!-- Privacy & Data Tab -->
+          <section class="settings-section" id="privacy-section">
+            <h2>Privacy & Data</h2>
+
+            <div class="consent-toggle">
+              <div class="toggle-switch" id="ml-consent-toggle" onclick="toggleMLConsent()"></div>
+              <div class="consent-info">
+                <div class="consent-label">Contribute correction data to ML model improvement</div>
+                <div class="consent-description">Drawing geometry and correction labels — not raw files — may be used for training</div>
+              </div>
+            </div>
+
+            <div class="admin-override-notice" id="admin-override-notice" style="display: none;">
+              This setting is managed by your Team Admin
+            </div>
+          </section>
+
+          <!-- Danger Zone Tab -->
+          <section class="settings-section" id="danger-section">
+            <h2>Danger Zone</h2>
+
+            <div class="danger-zone">
+              <h3>Delete Account</h3>
+              <p>
+                Deleting your account is permanent. Your drawings and personal data will be deleted within 30 days. Correction records will be anonymized and retained for model improvement.
+              </p>
+              <button class="btn btn-danger" onclick="initiateDelete()">Delete Account</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" id="delete-modal">
+    <div class="modal">
+      <h3>Confirm account deletion</h3>
+      <p>Please enter your password to confirm account deletion. This action cannot be undone.</p>
+      <div class="form-group">
+        <label for="delete-password">Password</label>
+        <input type="password" id="delete-password" placeholder="••••••••">
+        <span class="error-text" id="password-error">Password is required</span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">Delete Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+  (function () {
+    var path = window.location.pathname.split('/').pop() || '';
+    document.querySelectorAll('#sidebar-nav a').forEach(function (link) {
+      if (link.getAttribute('href') === path) link.classList.add('active');
+    });
+  })();
+</script>
+</body>
+</html>

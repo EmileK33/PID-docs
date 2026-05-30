@@ -1,0 +1,760 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscription & Upgrade Prompt - PID Analyzer</title>
+  <link href="https://cdn.tailwindcss.com" rel="stylesheet">
+  <style>
+    :root {
+    --sidebar-width: 240px;
+    --sidebar-bg: #111827;
+    --sidebar-text: #D1D5DB;
+    --sidebar-active-bg: #1F2937;
+    --sidebar-active-text: #FFFFFF;
+    --sidebar-active-border: #3B82F6;
+    --header-height: 56px;
+    --content-bg: #F9FAFB;
+  }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      display: flex;
+      min-height: 100vh;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--content-bg);
+    }
+    .sidebar {
+      width: var(--sidebar-width);
+      min-height: 100vh;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      overflow-y: auto;
+      z-index: 20;
+    }
+    .sidebar-logo {
+      padding: 16px 20px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #FFFFFF;
+      border-bottom: 1px solid #374151;
+      flex-shrink: 0;
+    }
+    .sidebar nav { padding: 8px; flex: 1; }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 2px;
+      border-left: 3px solid transparent;
+      transition: background 0.15s, color 0.15s;
+    }
+    .sidebar nav a:hover { background: #1F2937; color: #FFFFFF; }
+    .sidebar nav a.active {
+      background: var(--sidebar-active-bg);
+      color: var(--sidebar-active-text);
+      border-left-color: var(--sidebar-active-border);
+      font-weight: 600;
+    }
+    .main-wrapper {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .top-bar {
+      height: var(--header-height);
+      background: #FFFFFF;
+      border-bottom: 1px solid #E5E7EB;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .main-content { padding: 24px; flex: 1; }
+    .grace-period-banner {
+      background: #FEF3C7;
+      border-left: 4px solid #F59E0B;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .grace-period-banner-icon {
+      color: #F59E0B;
+      font-weight: bold;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .grace-period-banner-content {
+      flex: 1;
+    }
+    .grace-period-banner-text {
+      color: #111827;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .grace-period-banner-link {
+      color: #F59E0B;
+      text-decoration: underline;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .grace-period-banner-link:hover {
+      color: #D97706;
+    }
+    .cancellation-banner {
+      background: #F1F5F9;
+      border-left: 4px solid #64748B;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .cancellation-banner-content {
+      flex: 1;
+    }
+    .cancellation-banner-text {
+      color: #111827;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .cancellation-banner-link {
+      color: #3B82F6;
+      text-decoration: underline;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .cancellation-banner-link:hover {
+      color: #2563EB;
+    }
+    .usage-summary {
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+    .usage-label {
+      font-size: 14px;
+      color: #6B7280;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .usage-bar {
+      background: #E5E7EB;
+      border-radius: 4px;
+      height: 8px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .usage-fill {
+      background: #3B82F6;
+      height: 100%;
+      width: 33.33%;
+      transition: width 0.3s ease;
+    }
+    .usage-text {
+      font-size: 12px;
+      color: #6B7280;
+    }
+    .tier-cards-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    .tier-card {
+      background: #FFFFFF;
+      border: 2px solid #E5E7EB;
+      border-radius: 8px;
+      padding: 32px 24px;
+      text-align: center;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .tier-card:hover {
+      border-color: #D1D5DB;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .tier-card.active {
+      border-color: #3B82F6;
+      border-width: 2px;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .tier-card-badge {
+      position: absolute;
+      top: -12px;
+      right: 20px;
+      background: #3B82F6;
+      color: #FFFFFF;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .tier-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+    .tier-price {
+      font-size: 32px;
+      font-weight: 700;
+      color: #3B82F6;
+      margin-bottom: 4px;
+    }
+    .tier-price-period {
+      font-size: 12px;
+      color: #6B7280;
+      margin-bottom: 24px;
+    }
+    .tier-features {
+      list-style: none;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    .tier-features li {
+      padding: 8px 0;
+      font-size: 14px;
+      color: #111827;
+      border-bottom: 1px solid #E5E7EB;
+    }
+    .tier-features li:last-child {
+      border-bottom: none;
+    }
+    .tier-features li.disabled {
+      color: #D1D5DB;
+      text-decoration: line-through;
+    }
+    .tier-features li::before {
+      content: "✓ ";
+      color: #10B981;
+      font-weight: 700;
+      margin-right: 8px;
+    }
+    .tier-features li.disabled::before {
+      color: #D1D5DB;
+    }
+    .tier-cta {
+      width: 100%;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tier-cta.primary {
+      background: #3B82F6;
+      color: #FFFFFF;
+    }
+    .tier-cta.primary:hover {
+      background: #2563EB;
+    }
+    .tier-cta.disabled {
+      background: #E5E7EB;
+      color: #6B7280;
+      cursor: not-allowed;
+    }
+    .tier-cta.secondary {
+      background: transparent;
+      color: #3B82F6;
+      border: 1px solid #3B82F6;
+    }
+    .tier-cta.secondary:hover {
+      background: #EFF6FF;
+    }
+    .seat-selector {
+      margin: 20px 0;
+      padding: 16px;
+      background: #F3F4F6;
+      border-radius: 6px;
+    }
+    .seat-selector-label {
+      font-size: 13px;
+      color: #6B7280;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .seat-stepper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .seat-stepper-btn {
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #111827;
+      transition: all 0.15s ease;
+    }
+    .seat-stepper-btn:hover {
+      background: #F3F4F6;
+      border-color: #D1D5DB;
+    }
+    .seat-stepper-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111827;
+      min-width: 40px;
+      text-align: center;
+    }
+    .downgrade-section {
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      padding: 24px;
+      margin-top: 40px;
+    }
+    .downgrade-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 12px;
+    }
+    .downgrade-section-text {
+      font-size: 14px;
+      color: #6B7280;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .downgrade-link {
+      color: #EF4444;
+      text-decoration: underline;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .downgrade-link:hover {
+      color: #DC2626;
+    }
+    .billing-portal-link {
+      color: #3B82F6;
+      text-decoration: underline;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .billing-portal-link:hover {
+      color: #2563EB;
+    }
+    .section-header {
+      margin-top: 40px;
+      margin-bottom: 20px;
+    }
+    .section-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #111827;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal {
+      background: #FFFFFF;
+      border-radius: 8px;
+      padding: 32px;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.16);
+    }
+    .modal-header {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 16px;
+    }
+    .modal-body {
+      font-size: 14px;
+      color: #6B7280;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    .modal-actions button {
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .modal-actions button.primary {
+      background: #EF4444;
+      color: #FFFFFF;
+    }
+    .modal-actions button.primary:hover {
+      background: #DC2626;
+    }
+    .modal-actions button.secondary {
+      background: #E5E7EB;
+      color: #111827;
+    }
+    .modal-actions button.secondary:hover {
+      background: #D1D5DB;
+    }
+    .upgrade-prompt-modal {
+      display: none;
+    }
+    .upgrade-prompt-modal.active {
+      display: flex;
+    }
+    .upgrade-prompt-modal-content {
+      background: #FFFFFF;
+      border-radius: 8px;
+      padding: 32px;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.16);
+    }
+    .upgrade-prompt-modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 12px;
+    }
+    .upgrade-prompt-modal-body {
+      font-size: 14px;
+      color: #6B7280;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .upgrade-prompt-safety-note {
+      background: #F0FDF4;
+      border-left: 3px solid #10B981;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: #065F46;
+      border-radius: 4px;
+    }
+    .upgrade-prompt-actions {
+      display: flex;
+      gap: 12px;
+      flex-direction: column;
+    }
+    .upgrade-prompt-actions button {
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .upgrade-prompt-actions button.primary {
+      background: #3B82F6;
+      color: #FFFFFF;
+    }
+    .upgrade-prompt-actions button.primary:hover {
+      background: #2563EB;
+    }
+    .upgrade-prompt-actions button.secondary {
+      background: transparent;
+      color: #3B82F6;
+      border: 1px solid #3B82F6;
+    }
+    .upgrade-prompt-actions button.secondary:hover {
+      background: #EFF6FF;
+    }
+    .toast {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      background: #FFFFFF;
+      border-left: 4px solid #10B981;
+      border-radius: 6px;
+      padding: 16px 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      font-size: 14px;
+      color: #065F46;
+      z-index: 110;
+      display: none;
+      animation: slideIn 0.3s ease;
+    }
+    .toast.active {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .toast.success {
+      border-left-color: #10B981;
+      color: #065F46;
+    }
+    .toast.error {
+      border-left-color: #EF4444;
+      color: #7F1D1D;
+    }
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+  <div class="sidebar-logo">PID</div>
+  <nav id="sidebar-nav">
+    <a href="prototype-drawing-library.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Drawing Library
+    </a>
+    <a href="prototype-file-upload.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+      File Upload Drop Zone
+    </a>
+    <a href="prototype-review-canvas.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Drawing Review Canvas
+    </a>
+    <a href="prototype-symbol-detail-panel.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Symbol Detail & Reclassification Panel
+    </a>
+    <a href="prototype-export-modal.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+      Export Download Modal
+    </a>
+    <a href="prototype-account-settings.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Account Settings
+    </a>
+    <a href="prototype-subscription-upgrade.html">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+      Subscription & Upgrade Prompt
+    </a>
+  </nav>
+</aside>
+
+  <div class="main-wrapper">
+    <div class="top-bar">
+      <h1 style="font-size:16px;font-weight:600;color:#111827;flex:1">Subscription & Billing</h1>
+    </div>
+    <main class="main-content">
+      <!-- Grace Period Banner (Demo State) -->
+      <div class="grace-period-banner" id="gracePeriodBanner" style="display: none;">
+        <div class="grace-period-banner-icon">⚠</div>
+        <div class="grace-period-banner-content">
+          <div class="grace-period-banner-text">
+            Payment failed — your access continues for <strong>5 more days</strong>. 
+            <span class="grace-period-banner-link" onclick="handleUpdatePayment()">Update Payment Details</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cancellation Banner (Demo State) -->
+      <div class="cancellation-banner" id="cancellationBanner" style="display: none;">
+        <div class="cancellation-banner-content">
+          <div class="cancellation-banner-text">
+            Your Pro access continues until <strong>31 Jan 2025</strong>. 
+            <span class="cancellation-banner-link" onclick="handleResubscribe()">Resubscribe</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Free Tier Usage Summary -->
+      <div class="usage-summary" id="usageSummary">
+        <div class="usage-label">Drawings Processed This Month</div>
+        <div class="usage-bar">
+          <div class="usage-fill" id="usageFill" style="width: 33.33%;"></div>
+        </div>
+        <div class="usage-text">1 of 3 drawings processed • Resets 01 Jan 2025</div>
+      </div>
+
+      <!-- Tier Cards -->
+      <div class="tier-cards-container">
+        <!-- Free Tier Card -->
+        <div class="tier-card active" id="freeCard">
+          <div class="tier-name">Free</div>
+          <div class="tier-price">$0</div>
+          <div class="tier-price-period">/month</div>
+          <ul class="tier-features">
+            <li>3 drawings/month</li>
+            <li>CSV & XLSX export</li>
+            <li>ML symbol detection</li>
+            <li class="disabled">Revision comparison</li>
+          </ul>
+          <button class="tier-cta disabled" disabled>Current Plan</button>
+        </div>
+
+        <!-- Pro Tier Card -->
+        <div class="tier-card" id="proCard">
+          <div class="tier-name">Pro</div>
+          <div class="tier-price">$29</div>
+          <div class="tier-price-period">/month</div>
+          <ul class="tier-features">
+            <li>Unlimited drawings</li>
+            <li>CSV & XLSX export</li>
+            <li>ML symbol detection</li>
+            <li class="disabled">Revision comparison</li>
+          </ul>
+          <button class="tier-cta primary" onclick="handleUpgradePro()">Upgrade to Pro</button>
+        </div>
+
+        <!-- Team Tier Card -->
+        <div class="tier-card" id="teamCard">
+          <div class="tier-name">Team</div>
+          <div class="tier-price">$19</div>
+          <div class="tier-price-period">/seat/month</div>
+          <div class="seat-selector">
+            <label class="seat-selector-label">Number of Team Members</label>
+            <div class="seat-stepper">
+              <button class="seat-stepper-btn" onclick="decrementSeats()">−</button>
+              <div class="seat-stepper-value" id="seatCount">2</div>
+              <button class="seat-stepper-btn" onclick="incrementSeats()">+</button>
+            </div>
+          </div>
+          <ul class="tier-features">
+            <li>Unlimited drawings</li>
+            <li>Shared team library</li>
+            <li>Admin controls</li>
+            <li class="disabled">Revision comparison</li>
+          </ul>
+          <button class="tier-cta primary" onclick="handleUpgradeTeam()">Upgrade to Team</button>
+        </div>
+      </div>
+
+      <!-- Downgrade Section (Pro/Team Only) -->
+      <div class="downgrade-section" id="downgradeSection" style="display: none;">
+        <div class="downgrade-section-title">Plan Management</div>
+        <div class="downgrade-section-text">
+          Want to reduce costs? <span class="downgrade-link" onclick="handleDowngrade()">Downgrade to Free</span>
+        </div>
+      </div>
+
+      <!-- Billing Portal Link -->
+      <div class="section-header">
+        <div style="font-size: 14px; color: #6B7280;">
+          <span class="billing-portal-link" onclick="handleBillingPortal()">Manage billing and invoices →</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Stripe Checkout Modal (Simulated) -->
+  <div class="modal-overlay" id="stripeModal">
+    <div class="modal">
+      <div class="modal-header">Complete Payment</div>
+      <div class="modal-body">
+        <p style="margin-bottom: 12px;">Enter your card details to upgrade your plan.</p>
+        <p style="color: #111827; margin-bottom: 16px;"><strong>Card Number:</strong> 4242 4242 4242 4242</p>
+        <p style="color: #111827; margin-bottom: 16px;"><strong>Exp Date:</strong> 12/26</p>
+        <p style="color: #111827; margin-bottom: 16px;"><strong>CVC:</strong> 123</p>
+        <p style="color: #6B7280; font-size: 12px;"><em>Demo card — no actual charge</em></p>
+      </div>
+      <div class="modal-actions">
+        <button class="secondary" onclick="closeStripeModal()">Cancel</button>
+        <button class="primary" onclick="processPayment()">Pay Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Downgrade Confirmation Modal -->
+  <div class="modal-overlay" id="downgradeModal">
+    <div class="modal">
+      <div class="modal-header">Confirm Downgrade</div>
+      <div class="modal-body">
+        Are you sure you want to downgrade to Free? Your current plan access will continue until <strong>31 Jan 2025</strong>, then downgrade to Free (3 drawings/month limit).
+      </div>
+      <div class="modal-actions">
+        <button class="secondary" onclick="closeDowngradeModal()">Cancel</button>
+        <button class="primary" onclick="confirmDowngrade()">Confirm Downgrade</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Update Payment Modal -->
+  <div class="modal-overlay" id="updatePaymentModal">
+    <div class="modal">
+      <div class="modal-header">Update Payment Method</div>
+      <div class="modal-body">
+        <p style="margin-bottom: 12px;">Your payment method has failed. Please update it to restore access.</p>
+        <p style="color: #111827; margin-bottom: 16px;"><strong>Card Number:</strong> 4242 4242 4242 4242</p>
+        <p style="color: #111827; margin-bottom: 16px;"><strong>Exp Date:</strong> 12/26</p>
+        <p style="color: #111827; margin-bottom: 16px;"><strong>CVC:</strong> 123</p>
+      </div>
+      <div class="modal-actions">
+        <button class="secondary" onclick="closeUpdatePaymentModal()">Cancel</button>
+        <button class="primary" onclick="confirmUpdatePayment()">Update Payment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upgrade Prompt Modal (Free Limit Hit) -->
+  <div class="modal-overlay upgrade-prompt-modal" id="upgradePromptModal">
+    <div class="upgrade-prompt-modal-content">
+      <div class="upgrade-prompt-modal-title">You've reached your 3-drawing limit</div>
+      <div class="upgrade-prompt-modal-body">
+        You've processed 3 drawings this month on the Free plan. Your file is safe and saved. Upgrade to Pro to process unlimited drawings.
+      </div>
+      <div class="upgrade-prompt-safety-note">
+        ✓ Your uploaded file is retained and ready for processing
+      </div>
+      <div class="upgrade-prompt-actions">
+        <button class="primary" onclick="initiateUpgradeFromPrompt()">Upgrade to Pro</button>
+        <button class="secondary" onclick="closeUpgradePrompt()">Learn More</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+  (function () {
+    var path = window.location.pathname.split('/').pop() || '';
+    document.querySelectorAll('#sidebar-nav a').forEach(function (link) {
+      if (link.getAttribute('href') === path) link.classList.add('active');
+    });
+  })();
+</script>
+</body>
+</html>
+```
