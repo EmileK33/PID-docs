@@ -1,0 +1,252 @@
+{
+  "generatedAt": "2026-05-30T19:51:40.495Z",
+  "threshold": 20,
+  "rollup": {
+    "ship": 30,
+    "borderline": 0,
+    "regenerate": 0,
+    "errors": 0
+  },
+  "briefs": [
+    {
+      "briefId": "S0-A",
+      "filename": "S0-A-Scaffold-Shared-Stubs.md",
+      "total": 30,
+      "maxTotal": 30,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S0-B",
+      "filename": "S0-B-Integration-Harness-Manifests.md",
+      "total": 30,
+      "maxTotal": 30,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S1-A",
+      "filename": "S1-A-DB-Models-Migrations.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S1-B",
+      "filename": "S1-B-Auth-Middleware-Supabase-Client.md",
+      "total": 24,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S1-C",
+      "filename": "S1-C-Storage-Hash-Utilities.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S1-D",
+      "filename": "S1-D-Redis,-Cache,-PubSub-Celery-Config.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S1-E",
+      "filename": "S1-E-Analytics-Emitter-(PostHog).md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S1-F",
+      "filename": "S1-F-Frontend-Shared-Infrastructure.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S2-A",
+      "filename": "S2-A-Auth-Endpoints.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S2-B",
+      "filename": "S2-B-Drawings-Endpoints-+-SSE-Status.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S2-C",
+      "filename": "S2-C-Symbols-Corrections-Endpoints.md",
+      "total": 24,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S2-D",
+      "filename": "S2-D-Export-Endpoints-+-Sync-Path.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S2-E",
+      "filename": "S2-E-Subscription-+-Stripe-Webhook.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S2-F",
+      "filename": "S2-F-Account,-Consent-GDPR-Init-Endpoints.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S2-G",
+      "filename": "S2-G-Entity-Classes-Misc-Endpoints.md",
+      "total": 24,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S2-H",
+      "filename": "S2-H-Ingest-Worker.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S2-I",
+      "filename": "S2-I-Scan-Worker-(ClamAV).md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S2-J",
+      "filename": "S2-J-ML-Worker.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S2-K",
+      "filename": "S2-K-Export-Worker-(Async).md",
+      "total": 24,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S2-L",
+      "filename": "S2-L-GDPR-Erasure-Worker.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S2-M",
+      "filename": "S2-M-Notification-Worker-(SendGrid).md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S3-A",
+      "filename": "S3-A-Frontend-Auth-Pages.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S3-B",
+      "filename": "S3-B-Frontend-Drawing-Library.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S3-C",
+      "filename": "S3-C-Frontend-Upload-Flow.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S3-D",
+      "filename": "S3-D-Frontend-Review-Canvas-(Konva).md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S3-E",
+      "filename": "S3-E-Frontend-Account-Consent.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S3-F",
+      "filename": "S3-F-Frontend-Subscription-Upgrade.md",
+      "total": 24,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S3-G",
+      "filename": "S3-G-Frontend-Exports-UI-+-Notifications.md",
+      "total": 25,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S3-H",
+      "filename": "S3-H-Marketing-Site-(Next.js).md",
+      "total": 24,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    },
+    {
+      "briefId": "S4-A",
+      "filename": "S4-A-E2E-Integration-Tests.md",
+      "total": 23,
+      "maxTotal": 25,
+      "verdict": "ship",
+      "error": null
+    }
+  ]
+}
