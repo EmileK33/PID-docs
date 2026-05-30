@@ -1,0 +1,102 @@
+name: Session tests
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  session-tests:
+    name: session-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve session id and test command
+        id: resolve
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch="${GITHUB_HEAD_REF:-}"
+          echo "branch=$branch"
+          # Expected format: bp/<run-id>/<session-id>
+          if [[ "$branch" =~ ^bp/[^/]+/(.+)$ ]]; then
+            session_id="${BASH_REMATCH[1]}"
+          else
+            echo "Non-bp branch; running default full suite."
+            session_id=""
+          fi
+          echo "session_id=$session_id" >> "$GITHUB_OUTPUT"
+
+          manifest="specs/build-plan/run-manifest.json"
+          if [[ -n "$session_id" && -f "$manifest" ]]; then
+            cmd=$(jq -r --arg sid "$session_id" '
+              [ .waves[]?.sessions[]? | select(.id == $sid) | .test.cmd ] | .[0] // ""
+            ' "$manifest")
+          else
+            cmd=""
+          fi
+
+          if [[ -z "$cmd" ]]; then
+            echo "No session-specific test resolved; falling back."
+            if [[ -f package.json ]]; then
+              cmd="npm test --if-present"
+            else
+              cmd="echo 'No tests configured yet (pre-S0 state)'"
+            fi
+          fi
+          echo "Resolved test command: $cmd"
+          # Pipe through file to preserve quoting safely
+          printf '%s\n' "$cmd" > .ci-test-cmd
+
+      - name: Set up Node
+        if: hashFiles('package.json', 'frontend/package.json', 'marketing/package.json') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Node deps (root)
+        if: hashFiles('package.json') != ''
+        run: npm ci || npm install
+
+      - name: Install Node deps (frontend)
+        if: hashFiles('frontend/package.json') != ''
+        working-directory: frontend
+        run: npm ci || npm install
+
+      - name: Install Node deps (marketing)
+        if: hashFiles('marketing/package.json') != ''
+        working-directory: marketing
+        run: npm ci || npm install
+
+      - name: Set up Python
+        if: hashFiles('backend/pyproject.toml', 'backend/requirements.txt', 'requirements.txt', 'pyproject.toml') != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        if: hashFiles('backend/pyproject.toml') != ''
+        run: pipx install poetry || pip install poetry
+
+      - name: Install Python deps (backend poetry)
+        if: hashFiles('backend/pyproject.toml') != ''
+        working-directory: backend
+        run: poetry install --no-interaction --no-root
+
+      - name: Install Python deps (backend requirements.txt)
+        if: hashFiles('backend/requirements.txt') != ''
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Install Python deps (root requirements.txt)
+        if: hashFiles('requirements.txt') != ''
+        run: pip install -r requirements.txt
+
+      - name: Run session test
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmd="$(cat .ci-test-cmd)"
+          echo "Executing: $cmd"
+          eval "$cmd"
