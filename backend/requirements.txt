@@ -30,3 +30,9 @@ psycopg[binary]>=3.1
 # S1-E analytics: PostHog SDK + fakeredis for dead-letter queue test doubles.
 posthog>=3.0
 fakeredis>=2.20
+# S2-M notification worker: official SendGrid SDK (mandated by §1.7/§1.8) plus
+# pytest-mock, whose `mocker` fixture the worker tests use to patch the SendGrid
+# client and Celery retry. Kept here too so any session whose session-tests cmd
+# runs bare `pytest` against this manifest can import app.workers.notification.*.
+sendgrid>=6.0
+pytest-mock>=3.12
