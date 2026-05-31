@@ -21,10 +21,11 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.api.routers._stubs import stubs_router
+from app.api.routers.auth import router as auth_router
 
 # Real routers are inserted ABOVE stubs_router (first-match wins).
 all_routers: list[APIRouter] = [
-    # SESSION: S2-A inserts `auth_router` here
+    auth_router,  # SESSION: S2-A — shadows the /auth/* stubs below
     # SESSION: S2-B inserts `drawings_router` here
     # SESSION: S2-C inserts `symbols_router` here
     # SESSION: S2-D inserts `exports_router` here
