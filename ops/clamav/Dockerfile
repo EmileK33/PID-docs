@@ -1,6 +1,6 @@
 # ClamAV malware-scanning sidecar for the ingest worker (§1.8).
 # Based on the official clamav image; bundles freshclam for signature updates.
-FROM clamav/clamav:1.3
+FROM clamav/clamav:1.5-debian
 
 # Refresh virus definitions at build time so a fresh container can scan
 # immediately (freshclam also runs on a schedule inside the official image).
