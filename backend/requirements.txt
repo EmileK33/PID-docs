@@ -21,3 +21,9 @@ httpx==0.27.0
 PyJWT[crypto]==2.8.0
 cryptography==42.0.8
 pytest==8.2.2
+# S1-A: the session-tests gate runs `pytest tests/integration/test_db_schema.py`
+# with BARE pytest against this manifest. Collecting that dir imports
+# tests/integration/conftest.py -> fixtures/s3.py -> boto3 (so boto3 is required
+# just to collect), and the schema tests connect to Postgres via psycopg v3.
+boto3>=1.34
+psycopg[binary]>=3.1
