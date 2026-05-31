@@ -11,6 +11,8 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
+# S1-E analytics emitter — PostHog SDK (self-hosted-compatible, §1.7/§1.8).
+posthog = ">=3.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2"
@@ -34,6 +36,8 @@ celery = "^5.3"
 fastapi = "^0.111"
 uvicorn = { version = "^0.30", extras = ["standard"] }
 httpx = "^0.27"
+# S1-E: in-process Redis double for the analytics dead-letter queue tests.
+fakeredis = "^2.20"
 
 [tool.pytest.ini_options]
 # NOTE: this config only applies when pytest is invoked from inside backend/.
