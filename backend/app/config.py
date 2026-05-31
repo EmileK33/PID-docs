@@ -60,6 +60,18 @@ class Settings(BaseSettings):
     AWS_ACCESS_KEY_ID: Optional[str] = None
     AWS_SECRET_ACCESS_KEY: Optional[str] = None
 
+    # --- Stripe price→tier mapping (S2-E). Not in §1.12. ---
+    # Required to translate a Stripe price ID into a TierId inside the webhook
+    # handler / checkout session creation. Declared OPTIONAL (warn-if-absent)
+    # rather than "Refuse to start": making them hard-required would break the
+    # sibling integration suite, whose conftest (owned by S0-B, not editable
+    # here) seeds only the §1.12 subset of REQUIRED vars and would then
+    # sys.exit(1) on `import app.config`. Presence is enforced at the point of
+    # use in app.services.stripe_client (ConfigurationError → HTTP 500), so a
+    # misconfigured deployment still fails loudly the first time Stripe is hit.
+    STRIPE_PRO_PRICE_ID: Optional[str] = None
+    STRIPE_TEAM_PRICE_ID: Optional[str] = None
+
     # --- OPTIONAL: analytics disabled if absent (log warning) ---
     POSTHOG_API_KEY: Optional[str] = None
     POSTHOG_HOST: str = _DEFAULT_POSTHOG_HOST
@@ -120,6 +132,12 @@ class Settings(BaseSettings):
             logger.warning("POSTHOG_API_KEY absent; analytics disabled.")
         if not self.ML_MODEL_VERSION:
             logger.warning("ML_MODEL_VERSION absent; will use latest model in bucket.")
+        if not self.STRIPE_PRO_PRICE_ID or not self.STRIPE_TEAM_PRICE_ID:
+            logger.warning(
+                "STRIPE_PRO_PRICE_ID / STRIPE_TEAM_PRICE_ID absent; Stripe "
+                "checkout and tier resolution will fail until they are set "
+                "(see app.services.stripe_client)."
+            )
         if not self.ODA_LICENSE_EXPIRY_DATE:
             logger.warning("ODA_LICENSE_EXPIRY_DATE absent; 30-day expiry alerting disabled.")
         if not self.AWS_ACCESS_KEY_ID or not self.AWS_SECRET_ACCESS_KEY:

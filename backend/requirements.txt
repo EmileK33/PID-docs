@@ -30,3 +30,12 @@ psycopg[binary]>=3.1
 # S1-E analytics: PostHog SDK + fakeredis for dead-letter queue test doubles.
 posthog>=3.0
 fakeredis>=2.20
+# S2-E billing: Stripe SDK (checkout sessions + webhook signature verification).
+stripe==10.12.0
+# S2-E: app.db.session builds the engine from the plain `postgresql://`
+# DATABASE_URL, so SQLAlchemy resolves the psycopg2 dialect and imports psycopg2
+# at engine-construction time. The session-tests gate runs BARE pytest against
+# this file (no poetry venv); without psycopg2 here, importing app.main (which
+# now includes the S2-E routers that depend on app.db.session) raises
+# ModuleNotFoundError at collection on any postgresql:// DATABASE_URL.
+psycopg2-binary>=2.9
