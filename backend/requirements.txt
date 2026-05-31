@@ -30,3 +30,7 @@ psycopg[binary]>=3.1
 # S1-E analytics: PostHog SDK + fakeredis for dead-letter queue test doubles.
 posthog>=3.0
 fakeredis>=2.20
+# S2-I scan worker: pyclamd streams file bytes to the ClamAV sidecar over TCP
+# (no subprocess to clamscan, no disk write). Imported at module load by
+# app.workers.scan.clamav_client, so the bare-pytest session gate needs it here.
+pyclamd>=0.4.0
