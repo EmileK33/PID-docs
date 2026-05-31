@@ -22,12 +22,13 @@ from fastapi import APIRouter
 
 from app.api.routers._stubs import stubs_router
 from app.api.routers.auth import router as auth_router
+from app.api.routers.symbols import router as symbols_router
 
 # Real routers are inserted ABOVE stubs_router (first-match wins).
 all_routers: list[APIRouter] = [
     auth_router,  # SESSION: S2-A — shadows the /auth/* stubs below
     # SESSION: S2-B inserts `drawings_router` here
-    # SESSION: S2-C inserts `symbols_router` here
+    symbols_router,  # SESSION: S2-C inserts `symbols_router` here
     # SESSION: S2-D inserts `exports_router` here
     # SESSION: S2-E inserts `subscription_router` / `stripe_webhook_router` here
     # SESSION: S2-F inserts `account_router` here
