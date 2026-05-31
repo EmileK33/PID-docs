@@ -13,6 +13,9 @@ package-mode = false
 python = "^3.11"
 # S1-E analytics emitter — PostHog SDK (self-hosted-compatible, §1.7/§1.8).
 posthog = ">=3.0"
+# S2-D export worker/API — XLSX generation (pure-Python; no C ext on Fargate).
+# §1.8 mandates openpyxl (not xlwt/xlrd) for the .xlsx export path.
+openpyxl = "^3.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2"

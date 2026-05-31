@@ -30,3 +30,6 @@ psycopg[binary]>=3.1
 # S1-E analytics: PostHog SDK + fakeredis for dead-letter queue test doubles.
 posthog>=3.0
 fakeredis>=2.20
+# S2-D export API: openpyxl for XLSX generation (§1.8). Listed here too so the
+# bare-pytest session-tests gate can import app.services.export_generators.
+openpyxl>=3.1
