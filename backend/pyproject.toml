@@ -1,0 +1,28 @@
+[tool.poetry]
+# Baseline dependency manifest for the Python backend. S0-B (integration
+# harness) seeds this with the libraries the harness + smoke suite need.
+# Downstream backend sessions ADD their runtime deps here (FastAPI, Celery,
+# Alembic, etc.) — this file is the single shared Poetry manifest.
+name = "pid-backend"
+version = "0.0.0"
+description = "P&ID extraction platform backend — shared Poetry dependency manifest (harness baseline)."
+authors = ["P&ID Build <noreply@example.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2"
+pytest-asyncio = "^0.23"
+sqlalchemy = "^2.0"
+psycopg = { version = "^3.2", extras = ["binary"] }
+redis = "^5.0"
+boto3 = "^1.34"
+
+[tool.pytest.ini_options]
+# NOTE: this config only applies when pytest is invoked from inside backend/.
+# The integration smoke suite runs from the repo root against tests/integration
+# and is fully synchronous, so it does not rely on this. Downstream sessions
+# adding async tests under tests/integration must supply their own asyncio mode.
+asyncio_mode = "auto"

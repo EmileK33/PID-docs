@@ -1,0 +1,4 @@
+# The integration harness is driven by a POSIX shell script invoked via `bash`.
+# This repo's checkout machine runs with core.autocrlf=true, which would
+# otherwise rewrite *.sh to CRLF on Windows and break `bash scripts/*.sh`.
+*.sh text eol=lf

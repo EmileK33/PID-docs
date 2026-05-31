@@ -1,0 +1,9 @@
+{
+  "name": "pid-docs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "P&ID extraction platform — root workspace. Owns the project-level integration-harness command.",
+  "scripts": {
+    "test:integration": "bash scripts/test-integration.sh"
+  }
+}

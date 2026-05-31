@@ -1,0 +1,75 @@
+# Integration-test backing services. SEPARATE from the dev/test compose files
+# owned by S0-A: distinct project name, container names, and host ports so the
+# two can run side by side without collision.
+#
+# Host ports: Postgres 55432, Redis 56379, MinIO API 59000 / console 59001.
+name: pidtest
+
+configs:
+  # Init SQL delivered as an inline Docker config (stored in the Compose model,
+  # never read from the host filesystem). A host bind mount — and even a
+  # file-sourced config — fails with an I/O error on Docker Desktop when the
+  # repo lives under a OneDrive-synced path; inline content works there and in
+  # CI alike. Keep this in sync with fixtures/initdb/01-extensions.sql, which is
+  # the human-readable canonical copy.
+  pg-extensions:
+    content: |
+      -- Enable pgcrypto so gen_random_uuid() is available (spec §1.2).
+      CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: pidtest-postgres
+    environment:
+      POSTGRES_USER: pidtest
+      POSTGRES_PASSWORD: pidtest
+      POSTGRES_DB: pidtest
+    ports:
+      - "55432:5432"
+    configs:
+      # 01-extensions.sql enables pgcrypto (gen_random_uuid(), spec §1.2) at first boot.
+      - source: pg-extensions
+        target: /docker-entrypoint-initdb.d/01-extensions.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pidtest -d pidtest"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    container_name: pidtest-redis
+    ports:
+      - "56379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  minio:
+    image: minio/minio:latest
+    container_name: pidtest-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "59000:9000"
+      - "59001:9001"
+
+  # One-shot sidecar that creates the test bucket named by S3_BUCKET_NAME, then exits.
+  minio-setup:
+    image: minio/mc:latest
+    container_name: pidtest-minio-setup
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 minioadmin minioadmin >/dev/null 2>&1; do
+        echo 'waiting for minio...'; sleep 1;
+      done &&
+      mc mb --ignore-existing local/pidtest-bucket &&
+      echo 'pidtest-bucket ready'
+      "
