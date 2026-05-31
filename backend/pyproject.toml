@@ -13,9 +13,15 @@ package-mode = false
 python = "^3.11"
 # S1-E analytics emitter — PostHog SDK (self-hosted-compatible, §1.7/§1.8).
 posthog = ">=3.0"
+<<<<<<< HEAD
+# S2-I scan worker — pyclamd TCP client for the ClamAV sidecar (stream-scan,
+# no subprocess, no disk write). Runtime dep imported by app.workers.scan.
+pyclamd = ">=0.4.0"
+=======
 # S2-M notification worker — official SendGrid SDK for transactional email
 # dispatch (§1.7/§1.8 mandate the SDK; direct httpx/requests calls are forbidden).
 sendgrid = ">=6.0"
+>>>>>>> origin/main
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2"
