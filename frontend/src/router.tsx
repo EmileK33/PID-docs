@@ -14,6 +14,8 @@ import {
   type RouteObject,
 } from 'react-router-dom';
 
+import { Layout } from './components/Layout';
+
 // Scaffold stubs. S3 sessions replace these with real page modules by editing
 // the matching `element` below (e.g. S3-A swaps RegisterStub → pages/auth/Register).
 const RegisterStub = lazy(() =>
@@ -57,7 +59,14 @@ const NotFoundStub = lazy(() =>
 );
 
 function withSuspense(element: ReactElement): ReactElement {
-  return <Suspense fallback={<div>Loading…</div>}>{element}</Suspense>;
+  // Layout wraps every route so the app chrome (Nav + GraceBanner) renders
+  // around the page content. Suspense lives inside Layout so loading states
+  // still show the nav. [TECH-VISUAL-1] AC.
+  return (
+    <Layout>
+      <Suspense fallback={<div>Loading…</div>}>{element}</Suspense>
+    </Layout>
+  );
 }
 
 // SINGLE declarative route array. §1.6 SPA routes.
