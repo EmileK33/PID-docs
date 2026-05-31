@@ -682,13 +682,15 @@ export async function runSession(sessionEntry, state, deps = {}) {
   cur.testExitCode = testRes.exitCode;
 
   if (testRes.exitCode !== 0) {
-    cur.status = 'failed';
-    cur.error = `Independent test failed with exit ${testRes.exitCode}`;
-    cur.completedAt = new Date().toISOString();
-    return {
-      ok: false,
-      stdoutTail: `[claude]\n${claudeStdoutTail}\n[test]\n${tailLines(testRes.stdout + '\n' + testRes.stderr)}`,
-    };
+    // Local test failed — push and open PR anyway. Branch protection on
+    // `main` requires the `session-tests` CI check to pass before merge,
+    // and CI runs on ubuntu-latest with a real Docker + Python + Postgres
+    // env, so it's the authoritative gate. The local test step on Windows
+    // is too fragile (WSL vs Git Bash shell selection, Docker socket
+    // mounts, OneDrive path locks, etc.) to be trusted as a hard gate.
+    const testTail = tailLines(testRes.stdout + '\n' + testRes.stderr);
+    log(`  ⚠ ${sessionEntry.id} — local test failed exit ${testRes.exitCode}; pushing anyway (CI will gate). Tail:\n${testTail}`);
+    cur.error = `Local test failed with exit ${testRes.exitCode} (CI session-tests is the gate; local advisory only)`;
   }
 
   // 5) Push branch + open PR.

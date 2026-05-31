@@ -2,6 +2,8 @@
 .bp-worktrees/
 specs/build-plan/run-state.json
 specs/build-plan/wave-*-failure-report.json
+run-wave-*.log
+run-wave-*.err
 
 # Node
 node_modules/
