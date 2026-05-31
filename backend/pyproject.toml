@@ -11,6 +11,8 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
+# S1-E analytics emitter — PostHog SDK (self-hosted-compatible, §1.7/§1.8).
+posthog = ">=3.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2"
@@ -37,9 +39,11 @@ celery = "^5.3"
 fastapi = "^0.111"
 uvicorn = { version = "^0.30", extras = ["standard"] }
 httpx = "^0.27"
-# S1-B (auth layer) — JWT verification + crypto + in-process Redis double.
+# S1-B (auth layer) — JWT verification + crypto.
 pyjwt = { version = "^2.8", extras = ["crypto"] }
 cryptography = "^42.0"
+# In-process Redis double — needed by both S1-B (auth brute-force throttling)
+# and S1-E (analytics dead-letter queue). Min version ^2.21 covers both.
 fakeredis = "^2.21"
 
 [tool.pytest.ini_options]
