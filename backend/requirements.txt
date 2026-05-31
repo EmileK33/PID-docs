@@ -1,0 +1,18 @@
+# Canonical Python manifest for an S0-A-only checkout.
+#
+# The authoritative dependency manifest is S0-B's backend/pyproject.toml, which
+# does not exist until S0-B merges. The session-tests CI installs from this file
+# when pyproject is absent (see .github/workflows/session-tests.yml), so the
+# scaffold's own pytest gate can run in isolation. Pins target Python 3.11 (CI).
+#
+# When S0-B's pyproject.toml lands, this file becomes redundant but harmless.
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+pydantic==2.7.4
+pydantic-settings==2.3.4
+SQLAlchemy==2.0.30
+alembic==1.13.1
+celery==5.4.0
+redis==5.0.7
+httpx==0.27.0
+pytest==8.2.2
