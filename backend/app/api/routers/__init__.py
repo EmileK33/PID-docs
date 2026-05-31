@@ -21,6 +21,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.api.routers._stubs import stubs_router
+from app.api.routers.entity_classes import router as entity_classes_router
 
 # Real routers are inserted ABOVE stubs_router (first-match wins).
 all_routers: list[APIRouter] = [
@@ -30,7 +31,7 @@ all_routers: list[APIRouter] = [
     # SESSION: S2-D inserts `exports_router` here
     # SESSION: S2-E inserts `subscription_router` / `stripe_webhook_router` here
     # SESSION: S2-F inserts `account_router` here
-    # SESSION: S2-G inserts `entity_classes_router` here
+    entity_classes_router,  # SESSION: S2-G — shadows the GET /entity-classes stub
     stubs_router,  # fallback: every §1.6 path → 501 until shadowed above
 ]
 
