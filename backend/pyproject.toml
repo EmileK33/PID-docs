@@ -26,6 +26,9 @@ alembic = "^1.13"
 pydantic = "^2.7"
 pydantic-settings = "^2.3"
 psycopg = { version = "^3.2", extras = ["binary"] }
+# psycopg2 backs the default `postgresql://` dialect used by app.db.session
+# (S0-A) at engine-construction import time; the test fixtures use psycopg v3.
+psycopg2-binary = "^2.9"
 redis = "^5.0"
 boto3 = "^1.34"
 # Runtime app deps imported by S0-A's scaffold (app.main, app.workers.celery_app,
@@ -36,8 +39,12 @@ celery = "^5.3"
 fastapi = "^0.111"
 uvicorn = { version = "^0.30", extras = ["standard"] }
 httpx = "^0.27"
-# S1-E: in-process Redis double for the analytics dead-letter queue tests.
-fakeredis = "^2.20"
+# S1-B (auth layer) — JWT verification + crypto.
+pyjwt = { version = "^2.8", extras = ["crypto"] }
+cryptography = "^42.0"
+# In-process Redis double — needed by both S1-B (auth brute-force throttling)
+# and S1-E (analytics dead-letter queue). Min version ^2.21 covers both.
+fakeredis = "^2.21"
 
 [tool.pytest.ini_options]
 # NOTE: this config only applies when pytest is invoked from inside backend/.

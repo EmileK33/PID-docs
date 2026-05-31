@@ -150,7 +150,7 @@
             "tests/integration/test_auth_middleware.py"
           ],
           "test": {
-            "cmd": "cd backend && poetry run pytest tests/integration/test_auth_middleware.py -v",
+            "cmd": "cd backend && poetry run pytest ../tests/integration/test_auth_middleware.py -v",
             "file": "tests/integration/test_auth_middleware.py"
           },
           "checkpoint": "A FastAPI route guarded by Depends(get_current_user) returns 401 without a token and the authenticated user payload with a valid RS256 token; Redis key brute_force:{email} reaches TTL=900 after one recorded failed login.",
