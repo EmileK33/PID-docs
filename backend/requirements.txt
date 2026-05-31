@@ -30,3 +30,5 @@ psycopg[binary]>=3.1
 # S1-E analytics: PostHog SDK + fakeredis for dead-letter queue test doubles.
 posthog>=3.0
 fakeredis>=2.20
+# S2-H ingest worker: PDF page counting (the only allowed PDF library, §1.8).
+pypdf>=4.0

@@ -13,6 +13,8 @@ package-mode = false
 python = "^3.11"
 # S1-E analytics emitter — PostHog SDK (self-hosted-compatible, §1.7/§1.8).
 posthog = ">=3.0"
+# S2-H ingest worker — PDF page counting (the only allowed PDF library, §1.8).
+pypdf = ">=4.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2"
