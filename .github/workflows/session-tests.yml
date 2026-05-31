@@ -98,5 +98,13 @@ jobs:
         run: |
           set -euo pipefail
           cmd="$(cat .ci-test-cmd)"
+          # If the cmd is a bare `pytest` (no `cd`, no `poetry run`) AND a
+          # backend/pyproject.toml exists, run pytest via the backend poetry
+          # venv so deps installed there (boto3, redis, sqlalchemy, etc.) are
+          # importable. Many session tests live under tests/integration/ and
+          # import the same conftest.py which pulls in boto3 + friends.
+          if [[ -f backend/pyproject.toml ]] && [[ "$cmd" == pytest* ]]; then
+            cmd="cd backend && poetry run $cmd"
+          fi
           echo "Executing: $cmd"
           eval "$cmd"
