@@ -15,4 +15,9 @@ alembic==1.13.1
 celery==5.4.0
 redis==5.0.7
 httpx==0.27.0
+# S1-B auth layer: RS256 JWT verification. Kept here (in addition to pyproject)
+# so downstream sessions whose session-tests cmd uses bare `pytest` (system
+# Python + requirements.txt) can import app.auth.* without ModuleNotFoundError.
+PyJWT[crypto]==2.8.0
+cryptography==42.0.8
 pytest==8.2.2
