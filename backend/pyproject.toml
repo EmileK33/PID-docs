@@ -13,7 +13,9 @@ package-mode = false
 python = "^3.11"
 # S1-E analytics emitter — PostHog SDK (self-hosted-compatible, §1.7/§1.8).
 posthog = ">=3.0"
-# S2-I scan worker — pyclamd TCP client for ClamAV sidecar (stream-scan).
+# S2-H ingest worker — pypdf for PDF page counting (§1.8).
+pypdf = ">=4.0"
+# S2-I scan worker — pyclamd TCP client for ClamAV sidecar.
 pyclamd = ">=0.4.0"
 # S2-M notification worker — SendGrid SDK (§1.7/§1.8).
 sendgrid = ">=6.0"
