@@ -30,3 +30,7 @@ psycopg[binary]>=3.1
 # S1-E analytics: PostHog SDK + fakeredis for dead-letter queue test doubles.
 posthog>=3.0
 fakeredis>=2.20
+# S2-K export worker: XLSX generation (openpyxl). Required here too so the
+# session-tests gate (bare pytest + requirements.txt) can import
+# app.workers.export.tasks without ModuleNotFoundError. csv is stdlib.
+openpyxl>=3.1

@@ -31,6 +31,9 @@ psycopg = { version = "^3.2", extras = ["binary"] }
 psycopg2-binary = "^2.9"
 redis = "^5.0"
 boto3 = "^1.34"
+# S2-K export worker — XLSX generation. csv is stdlib; pandas is explicitly
+# excluded (ML-worker dep, not an export-worker dep).
+openpyxl = "^3.1"
 # Runtime app deps imported by S0-A's scaffold (app.main, app.workers.celery_app,
 # httpx-based tests). These need to be in the poetry venv too — otherwise pytest
 # in CI hits ModuleNotFoundError when collecting the integration suite (which
