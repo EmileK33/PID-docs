@@ -30,6 +30,7 @@ psycopg[binary]>=3.1
 # S1-E analytics: PostHog SDK + fakeredis for dead-letter queue test doubles.
 posthog>=3.0
 fakeredis>=2.20
+<<<<<<< HEAD
 # S2-E billing: Stripe SDK (checkout sessions + webhook signature verification).
 stripe==10.12.0
 # S2-E: app.db.session builds the engine from the plain `postgresql://`
@@ -39,3 +40,12 @@ stripe==10.12.0
 # now includes the S2-E routers that depend on app.db.session) raises
 # ModuleNotFoundError at collection on any postgresql:// DATABASE_URL.
 psycopg2-binary>=2.9
+=======
+# S2-F: email-validator for pydantic EmailStr (PATCH /account).
+email-validator>=2.0
+# S2-I scan worker: pyclamd streams file bytes to ClamAV sidecar over TCP.
+pyclamd>=0.4.0
+# S2-M notification worker: SendGrid SDK + pytest-mock for test doubles.
+sendgrid>=6.0
+pytest-mock>=3.12
+>>>>>>> origin/main
