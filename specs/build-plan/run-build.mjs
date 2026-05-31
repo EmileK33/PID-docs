@@ -113,17 +113,29 @@ let _saveCounter = 0;
 export async function renameAtomic(from, to, deps = {}) {
   const rename = deps.rename ?? fs.rename.bind(fs);
   const unlink = deps.unlink ?? fs.unlink.bind(fs);
-  try {
-    await rename(from, to);
-    return;
-  } catch (e) {
-    const code = e && typeof e === 'object' && 'code' in e ? e.code : null;
-    if (code !== 'EPERM' && code !== 'EEXIST' && code !== 'EACCES') throw e;
+  const sleep = deps.sleep ?? ((ms) => new Promise(r => setTimeout(r, ms)));
+  // EBUSY/EPERM/EACCES are transient on Windows when a sync agent (OneDrive,
+  // Dropbox, antivirus) briefly holds the destination open. Retry with
+  // backoff before giving up. With N parallel sessions all racing to write
+  // run-state.json, this also serializes against same-process contention.
+  const transient = new Set(['EPERM', 'EEXIST', 'EACCES', 'EBUSY']);
+  const delays = [0, 50, 150, 400, 1000, 2500];
+  let lastErr = null;
+  for (const delay of delays) {
+    if (delay > 0) {
+      await sleep(delay);
+      try { await unlink(to); } catch {}
+    }
+    try {
+      await rename(from, to);
+      return;
+    } catch (e) {
+      const code = e && typeof e === 'object' && 'code' in e ? e.code : null;
+      if (!transient.has(code)) throw e;
+      lastErr = e;
+    }
   }
-  // Fallback: unlink destination, retry rename. If unlink fails (e.g. dest
-  // never existed), ignore — the retry will surface a meaningful error.
-  try { await unlink(to); } catch {}
-  await rename(from, to);
+  throw lastErr;
 }
 
 export function makeEmptySessionState() {
