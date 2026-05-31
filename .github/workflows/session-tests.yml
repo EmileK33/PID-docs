@@ -98,5 +98,18 @@ jobs:
         run: |
           set -euo pipefail
           cmd="$(cat .ci-test-cmd)"
+          # If the cmd is a bare `pytest` (no `cd`, no `poetry run`) AND a
+          # backend/pyproject.toml exists, prepend the backend poetry venv's
+          # bin/ to PATH so `pytest` resolves to the venv binary with all
+          # the deps (boto3, redis, sqlalchemy, etc.) importable. We can't
+          # `cd backend` first because test paths in cmd are relative to the
+          # repo root (e.g. `tests/integration/...`).
+          if [[ -f backend/pyproject.toml ]] && [[ "$cmd" == pytest* ]]; then
+            VENV_PATH="$(cd backend && poetry env info --path 2>/dev/null || true)"
+            if [[ -n "$VENV_PATH" ]] && [[ -d "$VENV_PATH/bin" ]]; then
+              export PATH="$VENV_PATH/bin:$PATH"
+              echo "Prepended poetry venv to PATH: $VENV_PATH/bin"
+            fi
+          fi
           echo "Executing: $cmd"
           eval "$cmd"
