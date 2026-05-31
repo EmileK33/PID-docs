@@ -19,6 +19,12 @@ sqlalchemy = "^2.0"
 psycopg = { version = "^3.2", extras = ["binary"] }
 redis = "^5.0"
 boto3 = "^1.34"
+# pydantic / pydantic-settings back app.config (S0-A). They live in
+# requirements.txt for the S0-A-only checkout, but the poetry venv that runs the
+# integration suite needs them too — any test that imports app code (e.g. this
+# session's tests/integration/test_storage.py) imports app.config transitively.
+pydantic = "^2.7"
+pydantic-settings = "^2.3"
 
 [tool.pytest.ini_options]
 # NOTE: this config only applies when pytest is invoked from inside backend/.
