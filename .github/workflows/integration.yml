@@ -1,0 +1,48 @@
+name: integration
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  integration-harness:
+    name: integration-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: poetry install --no-interaction --no-root
+
+      - name: Install root Node dependencies
+        run: npm install
+
+      # Same command developers run locally — the single green signal.
+      - name: Run integration harness
+        run: npm run test:integration
+
+      - name: Assert no leaked fixture containers
+        if: always()
+        run: |
+          leaked="$(docker ps --filter 'name=pidtest-' --format '{{.Names}}')"
+          if [ -n "$leaked" ]; then
+            echo "Leaked fixture containers were not torn down:"
+            echo "$leaked"
+            exit 1
+          fi
+          echo "No leaked fixture containers."
