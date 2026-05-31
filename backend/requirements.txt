@@ -37,3 +37,10 @@ psycopg2-binary>=2.9
 # S1-E analytics: PostHog SDK + fakeredis for dead-letter queue test doubles.
 posthog>=3.0
 fakeredis>=2.20
+# S2-F: email-validator for pydantic EmailStr (PATCH /account).
+email-validator>=2.0
+# S2-I scan worker: pyclamd streams file bytes to ClamAV sidecar over TCP.
+pyclamd>=0.4.0
+# S2-M notification worker: SendGrid SDK + pytest-mock for test doubles.
+sendgrid>=6.0
+pytest-mock>=3.12

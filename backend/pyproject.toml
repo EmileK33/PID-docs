@@ -13,10 +13,17 @@ package-mode = false
 python = "^3.11"
 # S1-E analytics emitter — PostHog SDK (self-hosted-compatible, §1.7/§1.8).
 posthog = ">=3.0"
+# S2-I scan worker — pyclamd TCP client for ClamAV sidecar (stream-scan).
+pyclamd = ">=0.4.0"
+# S2-M notification worker — SendGrid SDK (§1.7/§1.8).
+sendgrid = ">=6.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2"
 pytest-asyncio = "^0.23"
+# S2-M notification-worker tests use the `mocker` fixture to patch the SendGrid
+# client and Celery `retry` without a live broker.
+pytest-mock = "^3.12"
 sqlalchemy = "^2.0"
 alembic = "^1.13"
 # pydantic / pydantic-settings back app.config (S0-A) and are also required
@@ -45,6 +52,8 @@ cryptography = "^42.0"
 # In-process Redis double — needed by both S1-B (auth brute-force throttling)
 # and S1-E (analytics dead-letter queue). Min version ^2.21 covers both.
 fakeredis = "^2.21"
+# S2-F: pydantic EmailStr backend for PATCH /account email validation.
+email-validator = "^2.0"
 
 [tool.pytest.ini_options]
 # NOTE: this config only applies when pytest is invoked from inside backend/.
