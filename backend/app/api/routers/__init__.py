@@ -23,6 +23,7 @@ from fastapi import APIRouter
 from app.api.routers._stubs import stubs_router
 from app.api.routers.account import router as account_router
 from app.api.routers.auth import router as auth_router
+from app.api.routers.exports import exports_router
 from app.api.routers.symbols import router as symbols_router
 
 # Real routers are inserted ABOVE stubs_router (first-match wins).
@@ -30,7 +31,7 @@ all_routers: list[APIRouter] = [
     auth_router,  # SESSION: S2-A — shadows the /auth/* stubs below
     # SESSION: S2-B inserts `drawings_router` here
     symbols_router,  # SESSION: S2-C inserts `symbols_router` here
-    # SESSION: S2-D inserts `exports_router` here
+    exports_router,  # SESSION: S2-D inserts `exports_router` here
     # SESSION: S2-E inserts `subscription_router` / `stripe_webhook_router` here
     account_router,  # SESSION: S2-F — shadows the /account stubs
     # SESSION: S2-G inserts `entity_classes_router` here
