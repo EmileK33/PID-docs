@@ -1,0 +1,128 @@
+# Local development stack. Profiles keep GPU + ingest sidecars opt-in:
+#   docker compose up postgres redis api          # core API loop
+#   docker compose --profile gpu up ml-worker     # GPU ML worker
+#   docker compose --profile ingest up oda-sandbox # ODA conversion sandbox
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: pid
+      POSTGRES_PASSWORD: pid
+      POSTGRES_DB: pid
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pid"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://pid:pid@postgres:5432/pid
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://pid:pid@postgres:5432/pid
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  ml-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.ml
+    profiles: ["gpu"]
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://pid:pid@postgres:5432/pid
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # GPU reservation (requires nvidia container toolkit on the host).
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: ["gpu"]
+
+  clamav:
+    build:
+      context: ./ops/clamav
+      dockerfile: Dockerfile
+    ports:
+      - "3310:3310"
+
+  oda-sandbox:
+    build:
+      context: ./ops/oda-sandbox
+      dockerfile: Dockerfile
+    profiles: ["ingest"]
+    # Runtime hardening (mirrors the production ECS task definition).
+    network_mode: "none"
+    read_only: true
+    user: "1000:1000"
+    tmpfs:
+      - /work
+
+  frontend:
+    image: node:20
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host"
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8000
+
+  marketing:
+    image: node:20
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    volumes:
+      - ./marketing:/app
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:

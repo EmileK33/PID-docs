@@ -1,0 +1,29 @@
+# CPU worker image — Celery workers for the ingest, scan, export, gdpr_erasure
+# and notification queues (ECS Fargate, CPU). The ML (GPU) worker uses
+# Dockerfile.ml instead.
+FROM python:3.11-slim AS base
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt ./
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+COPY app ./app
+COPY alembic.ini ./alembic.ini
+COPY alembic ./alembic
+
+RUN useradd --create-home --uid 1000 appuser
+USER 1000:1000
+
+# Queue selection is supplied at runtime, e.g.:
+#   celery -A app.workers.celery_app worker -Q ingest,scan,export,notification
+CMD ["celery", "-A", "app.workers.celery_app", "worker", "--loglevel=info", \
+     "-Q", "ingest,scan,export,gdpr_erasure,notification"]
